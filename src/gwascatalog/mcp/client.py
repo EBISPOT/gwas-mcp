@@ -15,7 +15,8 @@ if TYPE_CHECKING:
 
 
 def _to_query_params(
-    params: Any, exclude_fields: set[str] | None = None,
+    params: Any,
+    exclude_fields: set[str] | None = None,
 ) -> dict[str, Any]:
     """Convert a parameter model to API query params with camelCase keys."""
     exclude = exclude_fields or set()
@@ -45,7 +46,9 @@ class GwasCatalogClient:
         await self._client.aclose()
 
     async def get(
-        self, path: str, params: dict[str, Any] | None = None,
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         response = await self._client.get(path, params=params)
         try:

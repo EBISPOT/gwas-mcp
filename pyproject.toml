@@ -57,6 +57,10 @@ extend-select = [
     "NPY",      # Some numpy-specific things
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# pydantic models trigger a bunch of false positives
+"src/gwascatalog/mcp/models/**/*.py" = ["TC001"]
+
 [tool.ty.src]
 include = ["src/gwascatalog"]
 

@@ -1,4 +1,4 @@
-GWASCATALOG_MCP_INSTRUCTIONS ="""
+GWASCATALOG_MCP_INSTRUCTIONS = """
 Provides access to curated results from the GWAS Catalog, a     database of
 published human genome-wide association (GWAS) studies
 

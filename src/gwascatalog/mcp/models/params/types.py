@@ -1,0 +1,132 @@
+from __future__ import annotations
+
+from enum import StrEnum
+from typing import Annotated
+
+from pydantic import Field, StringConstraints
+
+
+class SortKeys(StrEnum):
+    P_VALUE = "p_value"
+    RISK_FREQUENCY = "risk_frequency"
+    OR_VALUE = "or_value"
+    BETA_NUM = "beta_num"
+
+
+class SortDirection(StrEnum):
+    ASC = "asc"
+    DESC = "desc"
+
+
+AssociationId = Annotated[str, Field(max_length=19, pattern=r"^\d{1,19}$")]
+EfoId = Annotated[
+    str,
+    Field(
+        pattern=r"^[A-Za-z]+_\d+$",
+        description="The trait URI shortform",
+        examples=["EFO_0001060"],
+    ),
+]
+AccessionId = Annotated[
+    str,
+    Field(
+        pattern=r"^GCST\d+$",
+        description="GWAS Catalog study accession ID",
+        examples=["GCST000854"],
+    ),
+]
+RsId = Annotated[
+    str,
+    Field(
+        pattern=r"^rs\d+$",
+        description="SNP rsID; if a haplotype it may include more than one rs number "
+        "(multiple SNPs comprising the haplotype)",
+        examples=["rs3093017"],
+    ),
+]
+PubmedId = Annotated[
+    str,
+    Field(
+        pattern=r"^[1-9][0-9]*$",
+        min_length=1,
+        max_length=12,
+        description="pubmedId of the publication",
+        examples=["35241825"],
+    ),
+]
+SortKeyField = Annotated[SortKeys, Field(description="Fields to sort by")]
+SortDirectionField = Annotated[SortDirection, Field(description="Direction to sort by")]
+
+
+# reject lowercase letters and any punctuation
+# reject hyphens at the start and end of a symbol
+hgnc_regex = r"^[A-Z0-9]+(?:-[A-Z0-9]+)*$"
+
+MappedGene = Annotated[
+    str,
+    StringConstraints(pattern=hgnc_regex),
+    Field(
+        description="Gene(s) overlapping the variant. If a variant is intergenic, the "
+        "closest 5' and 3' genes are listed",
+        examples=["ISG20", "A2M", "A4GALT", "HLA-DRA", "MT-ND1"],
+    ),
+]
+
+Page = Annotated[int, Field(ge=0, description="Zero-based page index")]
+Size = Annotated[
+    int, Field(ge=1, lt=50, description="The size of the page to be returned")
+]
+
+FullPValueSet = Annotated[
+    bool,
+    Field(description="Whether full summary statistics are available for this study"),
+]
+
+EfoTrait = Annotated[
+    str, Field(description="The trait name or label", examples=["Celiac disease"])
+]
+
+ShowChildTrait = Annotated[
+    bool,
+    Field(description="Display entities for descendants of a parent Efo Trait Term"),
+]
+
+DiseaseTrait = Annotated[
+    str,
+    Field(
+        description="Free text description of the trait investigated in this study",
+        examples=["Early-onset Parkinson's disease"],
+    ),
+]
+AncestralGroup = Annotated[
+    str,
+    Field(
+        description="Ancestry category group label, assigned to reduce complexity "
+        "within the data sets and place samples in context",
+        examples=["European"],
+    ),
+]
+Cohort = Annotated[
+    str,
+    Field(
+        description="Discovery stage cohorts used in this study", examples=["BioImage"]
+    ),
+]
+
+GxE = Annotated[
+    bool,
+    Field(description="Whether the study investigates a gene-environment interaction"),
+]
+
+URI = Annotated[
+    str,
+    Field(
+        description="The trait URI or unique identifier",
+        examples=["http://www.ebi.ac.uk/efo/EFO_0001060"],
+    ),
+]
+
+ExtendedGeneset = Annotated[
+    bool,
+    Field(description="Show extended matching genes in addition to the mapped genes"),
+]

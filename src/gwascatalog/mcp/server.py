@@ -12,16 +12,6 @@ if TYPE_CHECKING:
 from gwascatalog.mcp.client import GwasCatalogClient
 from gwascatalog.mcp.config import Settings
 from gwascatalog.mcp.constants import GWASCATALOG_MCP_INSTRUCTIONS
-from gwascatalog.mcp.formatters import (
-    flatten_association,
-    flatten_study,
-    flatten_trait,
-    format_association_detail,
-    format_csv,
-    format_pagination_footer,
-    format_study_detail,
-    format_trait_detail,
-)
 from gwascatalog.mcp.models import (
     AncestryResponse,
     AssociationResponse,
@@ -78,8 +68,6 @@ async def _resolve_traits(client: GwasCatalogClient, efo_trait: str) -> list[str
 
 # ---- Traits tool ----
 
-TRAIT_CSV_COLUMNS = ["efo_id", "efo_trait", "uri"]
-
 
 @mcp.tool()
 async def gwascatalog_get_traits(
@@ -128,34 +116,21 @@ async def gwascatalog_get_traits(
     # Detail mode
     if efo_id is not None:
         trait = EfoTraitResponse.model_validate(data)
-        return format_trait_detail(trait)
+        return trait.format_detail()
 
     # List mode
     items = data.get("_embedded", {}).get(_EMBEDDED_TRAITS, [])
     if not items:
-        return (
-            "No traits found. Try a different search term"
-            " or broader query."
-        )
+        return "No traits found. Try a different search term or broader query."
 
     traits = [EfoTraitResponse.model_validate(item) for item in items]
     page_info = PaginationInfo.model_validate(data["page"])
-    rows = [flatten_trait(t) for t in traits]
-    csv_text = format_csv(rows, TRAIT_CSV_COLUMNS)
-    footer = format_pagination_footer(page_info)
+    csv_text = EfoTraitResponse.to_csv(traits)
+    footer = page_info.format_footer()
     return f"{csv_text}\n\n{footer}"
 
 
 # ---- Studies tool ----
-
-STUDY_CSV_COLUMNS = [
-    "accession_id",
-    "disease_trait",
-    "efo_trait",
-    "pubmed_id",
-    "sample_size",
-    "ancestral_groups",
-]
 
 
 @mcp.tool()
@@ -228,42 +203,27 @@ async def gwascatalog_get_studies(
                 accession_id,
             )
             ancestry_items = ancestry_data.get(
-                "_embedded", {},
+                "_embedded",
+                {},
             ).get(_EMBEDDED_ANCESTRIES, [])
         except RuntimeError:
             ancestry_items = []
         ancestries = [AncestryResponse.model_validate(a) for a in ancestry_items]
-        return format_study_detail(study, ancestries)
+        return study.format_detail(ancestries)
 
     # List mode
     items = data.get("_embedded", {}).get(_EMBEDDED_STUDIES, [])
     if not items:
-        return (
-            "No studies found. Try different search terms"
-            " or broader filters."
-        )
+        return "No studies found. Try different search terms or broader filters."
 
     studies = [StudyResponse.model_validate(item) for item in items]
     page_info = PaginationInfo.model_validate(data["page"])
-    rows = [flatten_study(s) for s in studies]
-    csv_text = format_csv(rows, STUDY_CSV_COLUMNS)
-    footer = format_pagination_footer(page_info)
+    csv_text = StudyResponse.to_csv(studies)
+    footer = page_info.format_footer()
     return f"{csv_text}\n\n{footer}"
 
 
 # ---- Associations tool ----
-
-ASSOCIATION_CSV_COLUMNS = [
-    "association_id",
-    "rs_id",
-    "mapped_gene",
-    "p_value",
-    "beta",
-    "ci",
-    "risk_allele",
-    "efo_trait",
-    "study_accession",
-]
 
 
 @mcp.tool()
@@ -330,30 +290,25 @@ async def gwascatalog_get_associations(
                 association_id,
             )
             loci_items = loci_data.get(
-                "_embedded", {},
+                "_embedded",
+                {},
             ).get(_EMBEDDED_LOCI, [])
         except RuntimeError:
             loci_items = []
-        return format_association_detail(assoc, loci_items)
+        return assoc.format_detail(loci_items)
 
     # List mode
     items = data.get("_embedded", {}).get(
-        _EMBEDDED_ASSOCIATIONS, [],
+        _EMBEDDED_ASSOCIATIONS,
+        [],
     )
     if not items:
-        return (
-            "No associations found. Try different search"
-            " terms or broader filters."
-        )
+        return "No associations found. Try different search terms or broader filters."
 
-    associations = [
-        AssociationResponse.model_validate(item)
-        for item in items
-    ]
+    associations = [AssociationResponse.model_validate(item) for item in items]
     page_info = PaginationInfo.model_validate(data["page"])
-    rows = [flatten_association(a) for a in associations]
-    csv_text = format_csv(rows, ASSOCIATION_CSV_COLUMNS)
-    footer = format_pagination_footer(page_info)
+    csv_text = AssociationResponse.to_csv(associations)
+    footer = page_info.format_footer()
     return f"{csv_text}\n\n{footer}"
 
 
