@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Generic, TypeVar
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -13,22 +11,13 @@ class PaginationInfo(BaseModel):
     total_pages: int = Field(alias="totalPages")
     number: int
 
-    def format_footer(self) -> str:
-        """Format pagination info as a footer line."""
-        footer = (
-            f"Page {self.number + 1} of {self.total_pages} "
-            f"({self.total_elements} total results)"
-        )
-        if self.number + 1 < self.total_pages:
-            footer += (
-                ". Use page parameter to fetch the next page, or refine your query."
-            )
-        return footer
+    def to_summary(self) -> dict[str, int]:
+        return {
+            "page": self.number,
+            "total_pages": self.total_pages,
+            "total_results": self.total_elements,
+        }
 
-
-T = TypeVar("T")
-
-
-class PagedResponse(BaseModel, Generic[T]):
-    content: list[T]
-    page: PaginationInfo
+    @property
+    def is_truncated(self) -> bool:
+        return self.number + 1 < self.total_pages

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import asyncio
+from typing import TYPE_CHECKING, Any
 
 from gwascatalog.mcp.models import (
     AncestryResponse,
@@ -18,29 +19,40 @@ if TYPE_CHECKING:
     from gwascatalog.mcp.client import GwasCatalogClient
 
 
-async def get_studies(client: GwasCatalogClient, params: GetStudiesParams) -> str:
+async def _fetch_detail(
+    client: GwasCatalogClient, study: StudyResponse
+) -> dict[str, Any]:
+    try:
+        ancestry_data = await client.get_study_ancestries(study.accession_id)
+        ancestry_items = ancestry_data.get("_embedded", {}).get(
+            _EMBEDDED_ANCESTRIES, []
+        )
+    except RuntimeError:
+        ancestry_items = []
+    ancestries = [AncestryResponse.model_validate(a) for a in ancestry_items]
+    return study.format_detail(ancestries)
+
+
+async def get_studies(
+    client: GwasCatalogClient, params: GetStudiesParams
+) -> dict[str, Any]:
     data = await client.get_studies(params)
 
-    # Detail mode
     if params.accession_id is not None:
         study = StudyResponse.model_validate(data)
-        try:
-            ancestry_data = await client.get_study_ancestries(params.accession_id)
-            ancestry_items = ancestry_data.get("_embedded", {}).get(
-                _EMBEDDED_ANCESTRIES, []
-            )
-        except RuntimeError:
-            ancestry_items = []
-        ancestries = [AncestryResponse.model_validate(a) for a in ancestry_items]
-        return study.format_detail(ancestries)
+        detail = await _fetch_detail(client, study)
+        return {
+            "results": [detail],
+            "summary": {"total_results": 1},
+            "truncated": False,
+        }
 
-    # List mode
     items = data.get("_embedded", {}).get(_EMBEDDED_STUDIES, [])
-    if not items:
-        return "No studies found. Try different search terms or broader filters."
-
     studies = [StudyResponse.model_validate(item) for item in items]
     page_info = PaginationInfo.model_validate(data["page"])
-    csv_text = StudyResponse.to_csv(studies)
-    footer = page_info.format_footer()
-    return f"{csv_text}\n\n{footer}"
+    results = await asyncio.gather(*[_fetch_detail(client, s) for s in studies])
+    return {
+        "results": list(results),
+        "summary": page_info.to_summary(),
+        "truncated": page_info.is_truncated,
+    }

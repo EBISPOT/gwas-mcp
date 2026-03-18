@@ -20,4 +20,4 @@ class CountryOfRecruitment(BaseModel):
 
 
 class AncestralGroups(BaseModel):
-    ancestry_group: str | None = None
+    ancestral_group: str | None = None

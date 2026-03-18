@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import asyncio
+from typing import TYPE_CHECKING, Any
 
 from gwascatalog.mcp.models import (
     AssociationResponse,
@@ -18,28 +19,37 @@ if TYPE_CHECKING:
     from gwascatalog.mcp.client import GwasCatalogClient
 
 
+async def _fetch_detail(
+    client: GwasCatalogClient, assoc: AssociationResponse
+) -> dict[str, Any]:
+    try:
+        loci_data = await client.get_association_loci(assoc.association_id)
+        loci_items = loci_data.get("_embedded", {}).get(_EMBEDDED_LOCI, [])
+    except RuntimeError:
+        loci_items = []
+    return assoc.format_detail(loci_items)
+
+
 async def get_associations(
     client: GwasCatalogClient, params: GetAssociationsParams
-) -> str:
+) -> dict[str, Any]:
     data = await client.get_associations(params)
 
-    # Detail mode
     if params.association_id is not None:
         assoc = AssociationResponse.model_validate(data)
-        try:
-            loci_data = await client.get_association_loci(params.association_id)
-            loci_items = loci_data.get("_embedded", {}).get(_EMBEDDED_LOCI, [])
-        except RuntimeError:
-            loci_items = []
-        return assoc.format_detail(loci_items)
+        detail = await _fetch_detail(client, assoc)
+        return {
+            "results": [detail],
+            "summary": {"total_results": 1},
+            "truncated": False,
+        }
 
-    # List mode
     items = data.get("_embedded", {}).get(_EMBEDDED_ASSOCIATIONS, [])
-    if not items:
-        return "No associations found. Try different search terms or broader filters."
-
     associations = [AssociationResponse.model_validate(item) for item in items]
     page_info = PaginationInfo.model_validate(data["page"])
-    csv_text = AssociationResponse.to_csv(associations)
-    footer = page_info.format_footer()
-    return f"{csv_text}\n\n{footer}"
+    results = await asyncio.gather(*[_fetch_detail(client, a) for a in associations])
+    return {
+        "results": list(results),
+        "summary": page_info.to_summary(),
+        "truncated": page_info.is_truncated,
+    }

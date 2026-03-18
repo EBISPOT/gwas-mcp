@@ -62,11 +62,12 @@ async def gwascatalog_get_traits(
     size: int = 10,
     sort: str | None = None,
     direction: str | None = None,
-) -> str:
+) -> dict[str, Any]:
     """Search and browse EFO trait ontology terms from the GWAS Catalog.
 
-    Returns matching traits as CSV (list mode) or structured text (detail mode).
-    Use efo_id for a single trait lookup, or other parameters to filter/search.
+    Returns matching traits as a structured table (list mode) or a single record
+    dict (detail mode). Use efo_id for a single trait lookup, or other parameters
+    to filter/search.
 
     Args:
         efo_id: Single trait lookup by EFO ID (e.g. "EFO_0001060")
@@ -114,11 +115,11 @@ async def gwascatalog_get_studies(
     size: int = 10,
     sort: str | None = None,
     direction: str | None = None,
-) -> str:
+) -> dict[str, Any]:
     """Find GWAS studies by trait, ancestry, gene, or accession.
 
-    Returns matching studies as CSV (list mode) or structured text with
-    ancestry details (detail mode when accession_id is provided).
+    Returns matching studies as a structured table (list mode) or a single record
+    dict with ancestry details (detail mode when accession_id is provided).
 
     Args:
         accession_id: Single study lookup (e.g. "GCST000854")
@@ -177,11 +178,11 @@ async def gwascatalog_get_associations(
     size: int = 10,
     sort: str | None = None,
     direction: str | None = None,
-) -> str:
+) -> dict[str, Any]:
     """Find variant-trait associations with statistical details from the GWAS Catalog.
 
-    Returns associations as CSV (list mode) or structured text with loci
-    details (detail mode when association_id is provided).
+    Returns associations as a structured table (list mode) or a single record dict
+    with loci details (detail mode when association_id is provided).
 
     Args:
         association_id: Single association lookup by numeric ID

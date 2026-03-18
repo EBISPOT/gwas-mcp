@@ -11,3 +11,5 @@ Use this server when answering questions about genetic variants linked
 to traits or diseases, GWAS study results, or the populations in which
 associations were discovered.
 """
+
+GWASCATALOG_API_RATE_LIMIT = 15.0  # requests per second

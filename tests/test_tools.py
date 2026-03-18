@@ -8,7 +8,6 @@ from gwascatalog.mcp.server import (
     gwascatalog_get_traits,
 )
 
-
 # ---- Traits tests ----
 
 
@@ -37,9 +36,11 @@ async def test_get_traits_list(mock_ctx, mock_client):
     }
 
     result = await gwascatalog_get_traits(mock_ctx, efo_trait="diabetes")
-    assert "EFO_0001060" in result
-    assert "celiac disease" in result
-    assert "Page 1 of 1" in result
+    assert len(result["results"]) == 2
+    assert result["results"][0]["efo_id"] == "EFO_0001060"
+    assert result["results"][1]["efo_id"] == "EFO_0001360"
+    assert result["summary"]["total_results"] == 2
+    assert result["truncated"] is False
 
 
 async def test_get_traits_detail(mock_ctx, mock_client):
@@ -50,11 +51,14 @@ async def test_get_traits_detail(mock_ctx, mock_client):
     }
 
     result = await gwascatalog_get_traits(
-        mock_ctx, efo_id="EFO_0001060",
+        mock_ctx,
+        efo_id="EFO_0001060",
     )
-    assert "EFO_0001060" in result
-    assert "celiac disease" in result
-    assert "Page" not in result
+    assert len(result["results"]) == 1
+    assert result["results"][0]["efo_id"] == "EFO_0001060"
+    assert result["results"][0]["efo_trait"] == "celiac disease"
+    assert result["summary"]["total_results"] == 1
+    assert result["truncated"] is False
 
 
 async def test_get_traits_empty(mock_ctx, mock_client):
@@ -69,9 +73,12 @@ async def test_get_traits_empty(mock_ctx, mock_client):
     }
 
     result = await gwascatalog_get_traits(
-        mock_ctx, efo_trait="nonexistent_xyz",
+        mock_ctx,
+        efo_trait="nonexistent_xyz",
     )
-    assert "No traits found" in result
+    assert result["results"] == []
+    assert result["summary"]["total_results"] == 0
+    assert result["truncated"] is False
 
 
 # ---- Studies tests ----
@@ -92,9 +99,7 @@ async def test_get_studies_list(mock_ctx, mock_client):
                             "efo_trait": "celiac disease",
                         }
                     ],
-                    "discovery_ancestry": [
-                        "4533 European (U.K.)"
-                    ],
+                    "discovery_ancestry": ["4533 European (U.K.)"],
                 }
             ]
         },
@@ -106,12 +111,17 @@ async def test_get_studies_list(mock_ctx, mock_client):
         },
     }
 
+    mock_client.get_study_ancestries.return_value = {"_embedded": {"ancestries": []}}
+
     result = await gwascatalog_get_studies(
-        mock_ctx, efo_trait="celiac disease",
+        mock_ctx,
+        efo_trait="celiac disease",
     )
-    assert "GCST000854" in result
-    assert "Celiac disease" in result
-    assert "Page 1 of 1" in result
+    assert len(result["results"]) == 1
+    assert result["results"][0]["accession_id"] == "GCST000854"
+    assert result["results"][0]["disease_trait"] == "Celiac disease"
+    assert result["summary"]["total_results"] == 1
+    assert result["truncated"] is False
 
 
 async def test_get_studies_detail(mock_ctx, mock_client):
@@ -134,25 +144,24 @@ async def test_get_studies_detail(mock_ctx, mock_client):
                 {
                     "type": "initial",
                     "number_of_individuals": 4533,
-                    "ancestral_groups": [
-                        {"ancestral_group": "European"}
-                    ],
+                    "ancestral_groups": [{"ancestral_group": "European"}],
                     "country_of_origin": [],
-                    "country_of_recruitment": [
-                        {"country_name": "U.K."}
-                    ],
+                    "country_of_recruitment": [{"country_name": "U.K."}],
                 }
             ]
         }
     }
 
     result = await gwascatalog_get_studies(
-        mock_ctx, accession_id="GCST000854",
+        mock_ctx,
+        accession_id="GCST000854",
     )
-    assert "GCST000854" in result
-    assert "Celiac disease" in result
-    assert "European" in result
-    assert "Page" not in result
+    assert len(result["results"]) == 1
+    assert result["results"][0]["accession_id"] == "GCST000854"
+    assert result["results"][0]["disease_trait"] == "Celiac disease"
+    assert result["results"][0]["ancestries"][0]["ancestral_groups"] == ["European"]
+    assert result["summary"]["total_results"] == 1
+    assert result["truncated"] is False
 
 
 async def test_get_studies_empty(mock_ctx, mock_client):
@@ -167,9 +176,12 @@ async def test_get_studies_empty(mock_ctx, mock_client):
     }
 
     result = await gwascatalog_get_studies(
-        mock_ctx, efo_trait="nonexistent_xyz",
+        mock_ctx,
+        efo_trait="nonexistent_xyz",
     )
-    assert "No studies found" in result
+    assert result["results"] == []
+    assert result["summary"]["total_results"] == 0
+    assert result["truncated"] is False
 
 
 # ---- Associations tests ----
@@ -212,13 +224,20 @@ async def test_get_associations_list(mock_ctx, mock_client):
         },
     }
 
+    mock_client.get_association_loci.return_value = {"_embedded": {"loci": []}}
+
     result = await gwascatalog_get_associations(
-        mock_ctx, efo_trait="celiac disease",
+        mock_ctx,
+        efo_trait="celiac disease",
     )
-    assert "rs9277626" in result
-    assert "HLA-DPB2" in result
-    assert "2e-13" in result
-    assert "Page 1 of 1" in result
+    assert len(result["results"]) == 1
+    r = result["results"][0]
+    assert r["association_id"] == 188116214
+    assert "rs9277626" in r["variants"]
+    assert "HLA-DPB2" in r["mapped_genes"]
+    assert r["p_value"] == 2e-13
+    assert result["summary"]["total_results"] == 1
+    assert result["truncated"] is False
 
 
 async def test_get_associations_detail(mock_ctx, mock_client):
@@ -238,21 +257,21 @@ async def test_get_associations_detail(mock_ctx, mock_client):
         ],
         "accession_id": "GCST90468120",
         "snp_effect_allele": ["rs9277626-G"],
-        "snp_allele": [
-            {"rs_id": "rs9277626", "effect_allele": "G"}
-        ],
+        "snp_allele": [{"rs_id": "rs9277626", "effect_allele": "G"}],
     }
-    mock_client.get_association_loci.return_value = {
-        "_embedded": {"loci": []}
-    }
+    mock_client.get_association_loci.return_value = {"_embedded": {"loci": []}}
 
     result = await gwascatalog_get_associations(
-        mock_ctx, association_id=188116214,
+        mock_ctx,
+        association_id=188116214,
     )
-    assert "188116214" in result
-    assert "rs9277626" in result
-    assert "HLA-DPB2" in result
-    assert "Page" not in result
+    assert len(result["results"]) == 1
+    r = result["results"][0]
+    assert r["association_id"] == 188116214
+    assert "rs9277626" in r["variants"]
+    assert "HLA-DPB2" in r["mapped_genes"]
+    assert result["summary"]["total_results"] == 1
+    assert result["truncated"] is False
 
 
 async def test_get_associations_empty(mock_ctx, mock_client):
@@ -267,6 +286,9 @@ async def test_get_associations_empty(mock_ctx, mock_client):
     }
 
     result = await gwascatalog_get_associations(
-        mock_ctx, efo_trait="nonexistent_xyz",
+        mock_ctx,
+        efo_trait="nonexistent_xyz",
     )
-    assert "No associations found" in result
+    assert result["results"] == []
+    assert result["summary"]["total_results"] == 0
+    assert result["truncated"] is False
