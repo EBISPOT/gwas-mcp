@@ -1,10 +1,10 @@
-"""GWAS Catalog MCP server with one tool per resource."""
+"""GWAS Catalog MCP server."""
 
 from __future__ import annotations
 
 import argparse
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -13,23 +13,12 @@ from gwascatalog.mcp.client import GwasCatalogClient
 from gwascatalog.mcp.config import Settings
 from gwascatalog.mcp.constants import GWASCATALOG_MCP_INSTRUCTIONS
 from gwascatalog.mcp.models import (
-    AncestryResponse,
-    AssociationResponse,
-    EfoTraitResponse,
     GetAssociationsParams,
     GetStudiesParams,
     GetTraitsParams,
-    PaginationInfo,
-    StudyResponse,
 )
+from gwascatalog.mcp.tools import get_associations, get_studies, get_traits
 from mcp.server.fastmcp import Context, FastMCP
-
-# Embedded collection keys in the V2 API responses
-_EMBEDDED_TRAITS = "efo_traits"
-_EMBEDDED_STUDIES = "studies"
-_EMBEDDED_ASSOCIATIONS = "associations"
-_EMBEDDED_ANCESTRIES = "ancestries"
-_EMBEDDED_LOCI = "loci"
 
 settings = Settings()
 
@@ -56,14 +45,6 @@ mcp = FastMCP(
 
 def _get_client(ctx: Context) -> GwasCatalogClient:
     return ctx.request_context.lifespan_context["client"]
-
-
-async def _resolve_traits(client: GwasCatalogClient, efo_trait: str) -> list[str]:
-    """Resolve an EFO trait keyword to a list of EFO IDs."""
-    params = GetTraitsParams(efo_trait=efo_trait)
-    data = await client.get_efo_traits(params)
-    items = data.get("_embedded", {}).get("efoTraits", [])
-    return [EfoTraitResponse.model_validate(item).efo_id for item in items]
 
 
 # ---- Traits tool ----
@@ -98,7 +79,6 @@ async def gwascatalog_get_traits(
         sort: Field to sort by
         direction: Sort direction ("asc" or "desc")
     """
-    client = _get_client(ctx)
     params = GetTraitsParams(
         efo_id=efo_id,
         efo_trait=efo_trait,
@@ -110,24 +90,7 @@ async def gwascatalog_get_traits(
         sort=sort,
         direction=direction,
     )
-
-    data = await client.get_efo_traits(params)
-
-    # Detail mode
-    if efo_id is not None:
-        trait = EfoTraitResponse.model_validate(data)
-        return trait.format_detail()
-
-    # List mode
-    items = data.get("_embedded", {}).get(_EMBEDDED_TRAITS, [])
-    if not items:
-        return "No traits found. Try a different search term or broader query."
-
-    traits = [EfoTraitResponse.model_validate(item) for item in items]
-    page_info = PaginationInfo.model_validate(data["page"])
-    csv_text = EfoTraitResponse.to_csv(traits)
-    footer = page_info.format_footer()
-    return f"{csv_text}\n\n{footer}"
+    return await get_traits(client=_get_client(ctx), params=params)
 
 
 # ---- Studies tool ----
@@ -174,7 +137,6 @@ async def gwascatalog_get_studies(
         sort: Field to sort by
         direction: Sort direction ("asc" or "desc")
     """
-    client = _get_client(ctx)
     params = GetStudiesParams(
         accession_id=accession_id,
         efo_trait=efo_trait,
@@ -193,34 +155,7 @@ async def gwascatalog_get_studies(
         direction=direction,
     )
 
-    data = await client.get_studies(params)
-
-    # Detail mode
-    if accession_id is not None:
-        study = StudyResponse.model_validate(data)
-        try:
-            ancestry_data = await client.get_study_ancestries(
-                accession_id,
-            )
-            ancestry_items = ancestry_data.get(
-                "_embedded",
-                {},
-            ).get(_EMBEDDED_ANCESTRIES, [])
-        except RuntimeError:
-            ancestry_items = []
-        ancestries = [AncestryResponse.model_validate(a) for a in ancestry_items]
-        return study.format_detail(ancestries)
-
-    # List mode
-    items = data.get("_embedded", {}).get(_EMBEDDED_STUDIES, [])
-    if not items:
-        return "No studies found. Try different search terms or broader filters."
-
-    studies = [StudyResponse.model_validate(item) for item in items]
-    page_info = PaginationInfo.model_validate(data["page"])
-    csv_text = StudyResponse.to_csv(studies)
-    footer = page_info.format_footer()
-    return f"{csv_text}\n\n{footer}"
+    return await get_studies(client=_get_client(ctx), params=params)
 
 
 # ---- Associations tool ----
@@ -263,7 +198,6 @@ async def gwascatalog_get_associations(
         sort: Field to sort by
         direction: Sort direction ("asc" or "desc")
     """
-    client = _get_client(ctx)
     params = GetAssociationsParams(
         association_id=association_id,
         efo_trait=efo_trait,
@@ -280,36 +214,10 @@ async def gwascatalog_get_associations(
         direction=direction,
     )
 
-    data = await client.get_associations(params)
-
-    # Detail mode
-    if association_id is not None:
-        assoc = AssociationResponse.model_validate(data)
-        try:
-            loci_data = await client.get_association_loci(
-                association_id,
-            )
-            loci_items = loci_data.get(
-                "_embedded",
-                {},
-            ).get(_EMBEDDED_LOCI, [])
-        except RuntimeError:
-            loci_items = []
-        return assoc.format_detail(loci_items)
-
-    # List mode
-    items = data.get("_embedded", {}).get(
-        _EMBEDDED_ASSOCIATIONS,
-        [],
+    return await get_associations(
+        client=_get_client(ctx),
+        params=params,
     )
-    if not items:
-        return "No associations found. Try different search terms or broader filters."
-
-    associations = [AssociationResponse.model_validate(item) for item in items]
-    page_info = PaginationInfo.model_validate(data["page"])
-    csv_text = AssociationResponse.to_csv(associations)
-    footer = page_info.format_footer()
-    return f"{csv_text}\n\n{footer}"
 
 
 # ---- CLI ----
@@ -328,7 +236,9 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = _parse_args()
-    transport = "streamable-http" if args.transport == "http" else "stdio"
+    transport: Literal["streamable-http", "stdio"] = (
+        "streamable-http" if args.transport == "http" else "stdio"
+    )
     mcp.run(transport=transport)
 
 
