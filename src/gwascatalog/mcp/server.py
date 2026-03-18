@@ -13,9 +13,13 @@ from gwascatalog.mcp.client import GwasCatalogClient
 from gwascatalog.mcp.config import Settings
 from gwascatalog.mcp.constants import GWASCATALOG_MCP_INSTRUCTIONS
 from gwascatalog.mcp.models import (
+    AssociationResult,
     GetAssociationsParams,
     GetStudiesParams,
     GetTraitsParams,
+    StudyResult,
+    ToolResponse,
+    TraitResult,
 )
 from gwascatalog.mcp.tools import get_associations, get_studies, get_traits
 from mcp.server.fastmcp import Context, FastMCP
@@ -62,7 +66,7 @@ async def gwascatalog_get_traits(
     size: int = 10,
     sort: str | None = None,
     direction: str | None = None,
-) -> dict[str, Any]:
+) -> ToolResponse[TraitResult]:
     """Search and browse EFO trait ontology terms from the GWAS Catalog.
 
     Returns matching traits as a structured table (list mode) or a single record
@@ -115,7 +119,7 @@ async def gwascatalog_get_studies(
     size: int = 10,
     sort: str | None = None,
     direction: str | None = None,
-) -> dict[str, Any]:
+) -> ToolResponse[StudyResult]:
     """Find GWAS studies by trait, ancestry, gene, or accession.
 
     Returns matching studies as a structured table (list mode) or a single record
@@ -178,7 +182,7 @@ async def gwascatalog_get_associations(
     size: int = 10,
     sort: str | None = None,
     direction: str | None = None,
-) -> dict[str, Any]:
+) -> ToolResponse[AssociationResult]:
     """Find variant-trait associations with statistical details from the GWAS Catalog.
 
     Returns associations as a structured table (list mode) or a single record dict

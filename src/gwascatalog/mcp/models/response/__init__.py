@@ -15,7 +15,7 @@ from gwascatalog.mcp.models.response.traits import EfoTraitResponse
 __all__ = [
     "AncestryResponse",
     "AssociationResponse",
-    "StudyResponse",
     "EfoTraitResponse",
     "PaginationInfo",
+    "StudyResponse",
 ]

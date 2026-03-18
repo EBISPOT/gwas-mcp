@@ -14,14 +14,28 @@ from gwascatalog.mcp.models.response import (
     PaginationInfo,
     StudyResponse,
 )
+from gwascatalog.mcp.models.results import (
+    AncestryResult,
+    AssociationResult,
+    PageSummary,
+    StudyResult,
+    ToolResponse,
+    TraitResult,
+)
 
 __all__ = [
-    "GetTraitsParams",
-    "GetStudiesParams",
-    "GetAssociationsParams",
-    "AssociationResponse",
-    "StudyResponse",
     "AncestryResponse",
-    "PaginationInfo",
+    "AncestryResult",
+    "AssociationResponse",
+    "AssociationResult",
     "EfoTraitResponse",
+    "GetAssociationsParams",
+    "GetStudiesParams",
+    "GetTraitsParams",
+    "PageSummary",
+    "PaginationInfo",
+    "StudyResponse",
+    "StudyResult",
+    "ToolResponse",
+    "TraitResult",
 ]

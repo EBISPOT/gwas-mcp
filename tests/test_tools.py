@@ -36,11 +36,11 @@ async def test_get_traits_list(mock_ctx, mock_client):
     }
 
     result = await gwascatalog_get_traits(mock_ctx, efo_trait="diabetes")
-    assert len(result["results"]) == 2
-    assert result["results"][0]["efo_id"] == "EFO_0001060"
-    assert result["results"][1]["efo_id"] == "EFO_0001360"
-    assert result["summary"]["total_results"] == 2
-    assert result["truncated"] is False
+    assert len(result.results) == 2
+    assert result.results[0].efo_id == "EFO_0001060"
+    assert result.results[1].efo_id == "EFO_0001360"
+    assert result.summary.total_results == 2
+    assert result.truncated is False
 
 
 async def test_get_traits_detail(mock_ctx, mock_client):
@@ -54,11 +54,11 @@ async def test_get_traits_detail(mock_ctx, mock_client):
         mock_ctx,
         efo_id="EFO_0001060",
     )
-    assert len(result["results"]) == 1
-    assert result["results"][0]["efo_id"] == "EFO_0001060"
-    assert result["results"][0]["efo_trait"] == "celiac disease"
-    assert result["summary"]["total_results"] == 1
-    assert result["truncated"] is False
+    assert len(result.results) == 1
+    assert result.results[0].efo_id == "EFO_0001060"
+    assert result.results[0].efo_trait == "celiac disease"
+    assert result.summary.total_results == 1
+    assert result.truncated is False
 
 
 async def test_get_traits_empty(mock_ctx, mock_client):
@@ -76,9 +76,9 @@ async def test_get_traits_empty(mock_ctx, mock_client):
         mock_ctx,
         efo_trait="nonexistent_xyz",
     )
-    assert result["results"] == []
-    assert result["summary"]["total_results"] == 0
-    assert result["truncated"] is False
+    assert result.results == []
+    assert result.summary.total_results == 0
+    assert result.truncated is False
 
 
 # ---- Studies tests ----
@@ -117,11 +117,11 @@ async def test_get_studies_list(mock_ctx, mock_client):
         mock_ctx,
         efo_trait="celiac disease",
     )
-    assert len(result["results"]) == 1
-    assert result["results"][0]["accession_id"] == "GCST000854"
-    assert result["results"][0]["disease_trait"] == "Celiac disease"
-    assert result["summary"]["total_results"] == 1
-    assert result["truncated"] is False
+    assert len(result.results) == 1
+    assert result.results[0].accession_id == "GCST000854"
+    assert result.results[0].disease_trait == "Celiac disease"
+    assert result.summary.total_results == 1
+    assert result.truncated is False
 
 
 async def test_get_studies_detail(mock_ctx, mock_client):
@@ -156,12 +156,12 @@ async def test_get_studies_detail(mock_ctx, mock_client):
         mock_ctx,
         accession_id="GCST000854",
     )
-    assert len(result["results"]) == 1
-    assert result["results"][0]["accession_id"] == "GCST000854"
-    assert result["results"][0]["disease_trait"] == "Celiac disease"
-    assert result["results"][0]["ancestries"][0]["ancestral_groups"] == ["European"]
-    assert result["summary"]["total_results"] == 1
-    assert result["truncated"] is False
+    assert len(result.results) == 1
+    assert result.results[0].accession_id == "GCST000854"
+    assert result.results[0].disease_trait == "Celiac disease"
+    assert result.results[0].ancestries[0].ancestral_groups == ["European"]
+    assert result.summary.total_results == 1
+    assert result.truncated is False
 
 
 async def test_get_studies_empty(mock_ctx, mock_client):
@@ -179,9 +179,9 @@ async def test_get_studies_empty(mock_ctx, mock_client):
         mock_ctx,
         efo_trait="nonexistent_xyz",
     )
-    assert result["results"] == []
-    assert result["summary"]["total_results"] == 0
-    assert result["truncated"] is False
+    assert result.results == []
+    assert result.summary.total_results == 0
+    assert result.truncated is False
 
 
 # ---- Associations tests ----
@@ -230,14 +230,14 @@ async def test_get_associations_list(mock_ctx, mock_client):
         mock_ctx,
         efo_trait="celiac disease",
     )
-    assert len(result["results"]) == 1
-    r = result["results"][0]
-    assert r["association_id"] == 188116214
-    assert "rs9277626" in r["variants"]
-    assert "HLA-DPB2" in r["mapped_genes"]
-    assert r["p_value"] == 2e-13
-    assert result["summary"]["total_results"] == 1
-    assert result["truncated"] is False
+    assert len(result.results) == 1
+    r = result.results[0]
+    assert r.association_id == 188116214
+    assert r.snp_allele[0]["rs_id"] == "rs9277626"
+    assert "HLA-DPB2" in r.mapped_genes
+    assert r.p_value == 2e-13
+    assert result.summary.total_results == 1
+    assert result.truncated is False
 
 
 async def test_get_associations_detail(mock_ctx, mock_client):
@@ -265,13 +265,13 @@ async def test_get_associations_detail(mock_ctx, mock_client):
         mock_ctx,
         association_id=188116214,
     )
-    assert len(result["results"]) == 1
-    r = result["results"][0]
-    assert r["association_id"] == 188116214
-    assert "rs9277626" in r["variants"]
-    assert "HLA-DPB2" in r["mapped_genes"]
-    assert result["summary"]["total_results"] == 1
-    assert result["truncated"] is False
+    assert len(result.results) == 1
+    r = result.results[0]
+    assert r.association_id == 188116214
+    assert r.snp_allele[0]["rs_id"] == "rs9277626"
+    assert "HLA-DPB2" in r.mapped_genes
+    assert result.summary.total_results == 1
+    assert result.truncated is False
 
 
 async def test_get_associations_empty(mock_ctx, mock_client):
@@ -289,6 +289,6 @@ async def test_get_associations_empty(mock_ctx, mock_client):
         mock_ctx,
         efo_trait="nonexistent_xyz",
     )
-    assert result["results"] == []
-    assert result["summary"]["total_results"] == 0
-    assert result["truncated"] is False
+    assert result.results == []
+    assert result.summary.total_results == 0
+    assert result.truncated is False
