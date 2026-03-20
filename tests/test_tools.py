@@ -82,6 +82,8 @@ async def test_get_traits_empty(mock_ctx, mock_client):
     assert result.data == []
     assert result.pagination.total_results == 0
     assert result.pagination.truncated is False
+    assert len(result.suggestions) > 0
+    assert any("No results" in s for s in result.suggestions)
 
 
 # ---- Studies tests ----
@@ -184,6 +186,9 @@ async def test_get_studies_empty(mock_ctx, mock_client):
     assert result.data == []
     assert result.pagination.total_results == 0
     assert result.pagination.truncated is False
+    assert len(result.suggestions) > 0
+    assert any("No results" in s for s in result.suggestions)
+    assert any("gwascatalog_get_traits" in s for s in result.suggestions)
 
 
 # ---- Associations tests ----
@@ -297,3 +302,121 @@ async def test_get_associations_empty(mock_ctx, mock_client):
     assert result.data == []
     assert result.pagination.total_results == 0
     assert result.pagination.truncated is False
+    assert len(result.suggestions) > 0
+    assert any("No results" in s for s in result.suggestions)
+    assert any("gwascatalog_get_traits" in s for s in result.suggestions)
+
+
+# ---- Not found (404) tests ----
+
+
+async def test_get_traits_not_found(mock_ctx, mock_client):
+    mock_client.get_efo_traits.return_value = {
+        "items": [],
+        "page": None,
+    }
+
+    result = await gwascatalog_get_traits(mock_ctx, efo_id="EFO_9999999")
+    assert result.data == []
+    assert result.pagination.total_results == 0
+    assert result.message == "No results found in the GWAS Catalog."
+
+
+async def test_get_studies_not_found(mock_ctx, mock_client):
+    mock_client.get_studies.return_value = {
+        "items": [],
+        "page": None,
+    }
+
+    result = await gwascatalog_get_studies(mock_ctx, accession_id="GCST999999")
+    assert result.data == []
+    assert result.pagination.total_results == 0
+    assert result.message == "No results found in the GWAS Catalog."
+
+
+async def test_get_associations_not_found(mock_ctx, mock_client):
+    mock_client.get_associations.return_value = {
+        "items": [],
+        "page": None,
+    }
+
+    result = await gwascatalog_get_associations(mock_ctx, association_id="999999999")
+    assert result.data == []
+    assert result.pagination.total_results == 0
+    assert result.message == "No results found in the GWAS Catalog."
+
+
+# ---- Truncation suggestions tests ----
+
+
+async def test_get_traits_truncated_suggestions(mock_ctx, mock_client):
+    mock_client.get_efo_traits.return_value = {
+        "items": [
+            {
+                "efo_trait": "trait 1",
+                "uri": "http://example.com/1",
+                "efo_id": "EFO_0000001",
+            },
+        ],
+        "page": {
+            "size": 1,
+            "totalElements": 100,
+            "totalPages": 100,
+            "number": 0,
+        },
+    }
+
+    result = await gwascatalog_get_traits(mock_ctx)
+    assert result.pagination.truncated is True
+    assert len(result.suggestions) > 0
+    assert any("truncated" in s.lower() for s in result.suggestions)
+    assert any("page=1" in s for s in result.suggestions)
+
+
+async def test_get_studies_truncated_suggestions(mock_ctx, mock_client):
+    mock_client.get_studies.return_value = {
+        "items": [
+            {
+                "accession_id": "GCST000001",
+                "disease_trait": "Test",
+            }
+        ],
+        "page": {
+            "size": 1,
+            "totalElements": 500,
+            "totalPages": 500,
+            "number": 0,
+        },
+    }
+    mock_client.get_study_ancestries.return_value = []
+
+    result = await gwascatalog_get_studies(mock_ctx)
+    assert result.pagination.truncated is True
+    assert any("truncated" in s.lower() for s in result.suggestions)
+    assert any("filter" in s.lower() for s in result.suggestions)
+
+
+# ---- Successful queries have no suggestions ----
+
+
+async def test_get_traits_success_no_suggestions(mock_ctx, mock_client):
+    mock_client.get_efo_traits.return_value = {
+        "items": [
+            {
+                "efo_trait": "celiac disease",
+                "uri": "http://example.com",
+                "efo_id": "EFO_0001060",
+            },
+        ],
+        "page": {
+            "size": 10,
+            "totalElements": 1,
+            "totalPages": 1,
+            "number": 0,
+        },
+    }
+
+    result = await gwascatalog_get_traits(mock_ctx, efo_trait="celiac")
+    assert len(result.data) == 1
+    assert result.suggestions == []
+    assert result.message is None

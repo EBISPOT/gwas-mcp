@@ -16,6 +16,10 @@ if TYPE_CHECKING:
     )
 
 
+class NotFoundError(RuntimeError):
+    """Raised when the GWAS Catalog API returns 404 for a resource."""
+
+
 class FetchResult(TypedDict):
     """Normalized result from a GWAS Catalog API list/detail endpoint.
 
@@ -92,6 +96,8 @@ class GwasCatalogClient:
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 404:
+                raise NotFoundError(f"Resource not found (404) for {path}") from exc
             raise RuntimeError(
                 f"GWAS API request failed ({exc.response.status_code})"
                 f" for {path}: {exc.response.text}"
@@ -100,7 +106,10 @@ class GwasCatalogClient:
 
     async def get_studies(self, params: GetStudiesParams) -> FetchResult:
         if params.accession_id is not None:
-            data = await self.get(f"/v2/studies/{params.accession_id}")
+            try:
+                data = await self.get(f"/v2/studies/{params.accession_id}")
+            except NotFoundError:
+                return FetchResult(items=[], page=None)
             return FetchResult(items=[data], page=None)
         query = _to_query_params(params, exclude_fields={"accession_id"})
         data = await self.get("/v2/studies", params=query)
@@ -115,7 +124,10 @@ class GwasCatalogClient:
 
     async def get_associations(self, params: GetAssociationsParams) -> FetchResult:
         if params.association_id is not None:
-            data = await self.get(f"/v2/associations/{params.association_id}")
+            try:
+                data = await self.get(f"/v2/associations/{params.association_id}")
+            except NotFoundError:
+                return FetchResult(items=[], page=None)
             return FetchResult(items=[data], page=None)
         query = _to_query_params(params, exclude_fields={"association_id"})
         data = await self.get("/v2/associations", params=query)
@@ -130,7 +142,10 @@ class GwasCatalogClient:
 
     async def get_efo_traits(self, params: GetTraitsParams) -> FetchResult:
         if params.efo_id is not None:
-            data = await self.get(f"/v2/efo-traits/{params.efo_id}")
+            try:
+                data = await self.get(f"/v2/efo-traits/{params.efo_id}")
+            except NotFoundError:
+                return FetchResult(items=[], page=None)
             return FetchResult(items=[data], page=None)
         query = _to_query_params(params, exclude_fields={"efo_id"})
         data = await self.get("/v2/efo-traits", params=query)

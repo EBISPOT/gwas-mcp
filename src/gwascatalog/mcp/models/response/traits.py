@@ -14,5 +14,4 @@ class EfoTraitResponse(BaseModel):
         return TraitResult(
             efo_id=self.efo_id,
             efo_trait=self.efo_trait,
-            uri=self.uri,
         )
