@@ -44,6 +44,12 @@ from gwascatalog.mcp.models import (
     TraitResult,
     TraitSortKeyField,
 )
+from gwascatalog.mcp.resources import (
+    fetch_cohorts,
+    read_ancestry_labels,
+    read_countries,
+    read_variant_consequences,
+)
 from gwascatalog.mcp.tools import get_associations, get_studies, get_traits
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.types import ToolAnnotations
@@ -76,6 +82,68 @@ mcp = FastMCP(
 
 def _get_client(ctx: Context) -> GwasCatalogClient:
     return ctx.request_context.lifespan_context["client"]
+
+
+# ---- Resources ----
+
+
+@mcp.resource(
+    "gwascatalog://cohorts",
+    name="cohorts",
+    title="GWAS Catalog Cohorts",
+    description=(
+        "Controlled vocabulary of cohort identifiers and names from the GWAS Catalog. "
+        "Updated weekly; cached for 24 hours."
+    ),
+    mime_type="application/json",
+)
+async def gwascatalog_cohorts() -> dict:
+    return await fetch_cohorts()
+
+
+@mcp.resource(
+    "gwascatalog://ancestry-labels",
+    name="ancestry_labels",
+    title="GWAS Catalog Ancestry Labels",
+    description=(
+        "Ancestry categories used to classify study participants in the GWAS Catalog, "
+        "from Morales et al. 2018 (doi:10.1186/s13059-018-1396-2). "
+        "Includes broad ancestral group labels, descriptions, "
+        "and example sub-populations."
+    ),
+    mime_type="application/json",
+)
+def gwascatalog_ancestry_labels() -> dict:
+    return read_ancestry_labels()
+
+
+@mcp.resource(
+    "gwascatalog://variant-consequences",
+    name="variant_consequences",
+    title="Ensembl Variant Consequences",
+    description=(
+        "Sequence Ontology (SO) consequence terms used to annotate variant effects "
+        "on transcripts, ordered by severity. Sourced from Ensembl. "
+        "Includes SO term, accession, display name, and IMPACT rating."
+    ),
+    mime_type="application/json",
+)
+def gwascatalog_variant_consequences() -> dict:
+    return read_variant_consequences()
+
+
+@mcp.resource(
+    "gwascatalog://countries",
+    name="countries",
+    title="GWAS Catalog Countries of Recruitment",
+    description=(
+        "Valid country names accepted by the GWAS Catalog for the "
+        "'country of recruitment' field in study metadata."
+    ),
+    mime_type="application/json",
+)
+def gwascatalog_countries() -> dict:
+    return read_countries()
 
 
 # ---- Traits tool ----

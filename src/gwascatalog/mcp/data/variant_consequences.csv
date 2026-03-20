@@ -1,0 +1,42 @@
+so_term,so_accession,display_term,impact
+transcript_ablation,SO:0001893,Transcript ablation,HIGH
+splice_acceptor_variant,SO:0001574,Splice acceptor variant,HIGH
+splice_donor_variant,SO:0001575,Splice donor variant,HIGH
+stop_gained,SO:0001587,Stop gained,HIGH
+frameshift_variant,SO:0001589,Frameshift variant,HIGH
+stop_lost,SO:0001578,Stop lost,HIGH
+start_lost,SO:0002012,Start lost,HIGH
+transcript_amplification,SO:0001889,Transcript amplification,HIGH
+feature_elongation,SO:0001907,Feature elongation,HIGH
+feature_truncation,SO:0001906,Feature truncation,HIGH
+inframe_insertion,SO:0001821,Inframe insertion,MODERATE
+inframe_deletion,SO:0001822,Inframe deletion,MODERATE
+missense_variant,SO:0001583,Missense variant,MODERATE
+protein_altering_variant,SO:0001818,Protein altering variant,MODERATE
+splice_donor_5th_base_variant,SO:0001787,Splice donor 5th base variant,LOW
+splice_region_variant,SO:0001630,Splice region variant,LOW
+splice_donor_region_variant,SO:0002170,Splice donor region variant,LOW
+splice_polypyrimidine_tract_variant,SO:0002169,Splice polypyrimidine tract variant,LOW
+incomplete_terminal_codon_variant,SO:0001626,Incomplete terminal codon variant,LOW
+start_retained_variant,SO:0002019,Start retained variant,LOW
+stop_retained_variant,SO:0001567,Stop retained variant,LOW
+synonymous_variant,SO:0001819,Synonymous variant,LOW
+coding_sequence_variant,SO:0001580,Coding sequence variant,MODIFIER
+mature_miRNA_variant,SO:0001620,Mature miRNA variant,MODIFIER
+5_prime_UTR_variant,SO:0001623,5 prime UTR variant,MODIFIER
+3_prime_UTR_variant,SO:0001624,3 prime UTR variant,MODIFIER
+non_coding_transcript_exon_variant,SO:0001792,Non coding transcript exon variant,MODIFIER
+intron_variant,SO:0001627,Intron variant,MODIFIER
+NMD_transcript_variant,SO:0001621,NMD transcript variant,MODIFIER
+non_coding_transcript_variant,SO:0001619,Non coding transcript variant,MODIFIER
+coding_transcript_variant,SO:0001968,Coding transcript variant,MODIFIER
+upstream_gene_variant,SO:0001631,Upstream gene variant,MODIFIER
+downstream_gene_variant,SO:0001632,Downstream gene variant,MODIFIER
+TFBS_ablation,SO:0001895,TFBS ablation,MODIFIER
+TFBS_amplification,SO:0001892,TFBS amplification,MODIFIER
+TF_binding_site_variant,SO:0001782,TF binding site variant,MODIFIER
+regulatory_region_ablation,SO:0001894,Regulatory region ablation,MODIFIER
+regulatory_region_amplification,SO:0001891,Regulatory region amplification,MODIFIER
+regulatory_region_variant,SO:0001566,Regulatory region variant,MODIFIER
+intergenic_variant,SO:0001628,Intergenic variant,MODIFIER
+sequence_variant,SO:0001060,Sequence variant,MODIFIER
