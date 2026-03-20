@@ -1,21 +1,13 @@
 from __future__ import annotations
 
-from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import Field, StringConstraints
 
-
-class SortKeys(StrEnum):
-    P_VALUE = "p_value"
-    RISK_FREQUENCY = "risk_frequency"
-    OR_VALUE = "or_value"
-    BETA_NUM = "beta_num"
-
-
-class SortDirection(StrEnum):
-    ASC = "asc"
-    DESC = "desc"
+AssociationSortKeys = Literal["p_value", "risk_frequency", "or_value", "beta_num"]
+StudySortKeys = Literal["accession_id", "snp_count"]
+TraitSortKeys = Literal["efo_id", "efo_trait"]
+SortDirection = Literal["asc", "desc"]
 
 
 AssociationId = Annotated[str, Field(max_length=19, pattern=r"^\d{1,19}$")]
@@ -24,7 +16,7 @@ EfoId = Annotated[
     Field(
         pattern=r"^[A-Za-z]+_\d+$",
         description="The trait URI shortform",
-        examples=["EFO_0001060"],
+        examples=["EFO_0001060", "MONDO_0005180"],
     ),
 ]
 AccessionId = Annotated[
@@ -32,7 +24,7 @@ AccessionId = Annotated[
     Field(
         pattern=r"^GCST\d+$",
         description="GWAS Catalog study accession ID",
-        examples=["GCST000854"],
+        examples=["GCST000854", "GCST004138"],
     ),
 ]
 RsId = Annotated[
@@ -50,11 +42,19 @@ PubmedId = Annotated[
         pattern=r"^[1-9][0-9]*$",
         min_length=1,
         max_length=12,
-        description="pubmedId of the publication",
-        examples=["35241825"],
+        description="Pubmed ID of the publication",
+        examples=["35241825", "28256260"],
     ),
 ]
-SortKeyField = Annotated[SortKeys, Field(description="Fields to sort by")]
+AssociationSortKeyField = Annotated[
+    AssociationSortKeys, Field(description="Fields to sort by (associations)")
+]
+StudySortKeyField = Annotated[
+    StudySortKeys, Field(description="Fields to sort by (studies)")
+]
+TraitSortKeyField = Annotated[
+    TraitSortKeys, Field(description="Fields to sort by (traits)")
+]
 SortDirectionField = Annotated[SortDirection, Field(description="Direction to sort by")]
 
 
@@ -67,13 +67,14 @@ MappedGene = Annotated[
     StringConstraints(pattern=hgnc_regex),
     Field(
         description="Gene(s) overlapping the variant. If a variant is intergenic, the "
-        "closest 5' and 3' genes are listed",
+        "closest 5' and 3' genes are listed. Must be a HGNC symbol.",
         examples=["ISG20", "A2M", "A4GALT", "HLA-DRA", "MT-ND1"],
     ),
 ]
 
-Page = Annotated[int, Field(ge=0, description="Zero-based page index")]
-Size = Annotated[
+PageField = Annotated[int, Field(ge=0, description="Zero-based page index")]
+
+SizeField = Annotated[
     int, Field(ge=1, lt=50, description="The size of the page to be returned")
 ]
 

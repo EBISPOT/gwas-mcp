@@ -1,0 +1,25 @@
+
+replicaCount: 1
+
+image:
+  repository: dockerhub.ebi.ac.uk/gwas/gwas-mcp
+  tag: dev
+  pullPolicy: Always
+
+service:
+  name: gwas-mcp
+  port: 80
+  containerPort: 8000
+
+ingress:
+  name: gwas-mcp
+  annotations: {}
+  path: "/api/mcp(/|$)(.*)"
+
+resources:
+  limits:
+    cpu: 1
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi

@@ -13,3 +13,12 @@ associations were discovered.
 """
 
 GWASCATALOG_API_RATE_LIMIT = 15.0  # requests per second
+
+TRAIT_SEARCH_GUIDANCE = (
+    "If you prefer to first identify a wider range of relevant traits, start "
+    "with the `gwascatalog_get_traits` tool using free-text search with the efo_trait "
+    "parameter. For example, "
+    "'COVID-19' may return related traits like 'long COVID-19' or "
+    "'response to COVID-19 vaccine'.\n\n"
+    "For precision, prefer EFO IDs (e.g. MONDO_0004979) over names."
+)

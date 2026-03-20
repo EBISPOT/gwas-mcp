@@ -15,6 +15,7 @@ from gwascatalog.mcp.models.params.types import (
     MappedGene,
     PubmedId,
     ShowChildTrait,
+    StudySortKeyField,
 )
 
 
@@ -35,3 +36,4 @@ class GetStudiesParams(Params):
     full_pvalue_set: FullPValueSet | None = None
     gxe: GxE | None = None
     show_child_trait: ShowChildTrait | None = None
+    sort: StudySortKeyField | None = None

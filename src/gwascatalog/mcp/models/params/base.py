@@ -1,29 +1,29 @@
-from typing import Self
-
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict
 
 from gwascatalog.mcp.models.params.types import (
-    Page,
-    Size,
-    SortDirection,
+    PageField,
+    SizeField,
     SortDirectionField,
-    SortKeyField,
 )
 
 
 class Params(BaseModel):
+    """Base model for MCP tool parameters.
+
+    All MCP tool parameter models should inherit from this base, which
+    validates and sets defaults for common pagination and sorting parameters.
+    """
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    page: Page = 0
-    size: Size = 10
-    sort: SortKeyField | None = None
-    direction: SortDirectionField | None = None
+    page: PageField = 0
+    size: SizeField = 10
+    direction: SortDirectionField = "asc"
 
-    @model_validator(mode="after")
-    def set_default_sort_direction(self) -> Self:
-        """Ensure that direction defaults to ASC if sort is provided but no
-        direction."""
-        if self.sort is not None and self.direction is None:
-            # model_copy because the model is immutable
-            return self.model_copy(update={"direction": SortDirection.ASC})
-        return self
+    def __hash__(self) -> int:
+        """
+        Stable hash based on the JSON representation of the model
+
+        Useful for caching tool results based on parameters
+        """
+        return hash(self.model_dump_json(by_alias=True, exclude_none=False))

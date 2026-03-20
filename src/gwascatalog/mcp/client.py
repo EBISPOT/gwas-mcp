@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import httpx
 
@@ -16,7 +16,18 @@ if TYPE_CHECKING:
     )
 
 
-class _RateLimiter:
+class FetchResult(TypedDict):
+    """Normalized result from a GWAS Catalog API list/detail endpoint.
+
+    items: list of raw JSON objects (one item for single-ID lookups).
+    page:  raw pagination dict from the API, or None for single-ID lookups.
+    """
+
+    items: list[dict[str, Any]]
+    page: dict[str, Any] | None
+
+
+class RateLimiter:
     """Token bucket rate limiter."""
 
     def __init__(self, rate: float) -> None:
@@ -66,7 +77,7 @@ class GwasCatalogClient:
             timeout=httpx.Timeout(timeout_seconds),
             headers={"Accept": "application/json"},
         )
-        self._rate_limiter = _RateLimiter(rate=15.0)
+        self._rate_limiter = RateLimiter(rate=15.0)
 
     async def close(self) -> None:
         await self._client.aclose()
@@ -87,26 +98,43 @@ class GwasCatalogClient:
             ) from exc
         return response.json()
 
-    async def get_studies(self, params: GetStudiesParams) -> dict[str, Any]:
+    async def get_studies(self, params: GetStudiesParams) -> FetchResult:
         if params.accession_id is not None:
-            return await self.get(f"/v2/studies/{params.accession_id}")
+            data = await self.get(f"/v2/studies/{params.accession_id}")
+            return FetchResult(items=[data], page=None)
         query = _to_query_params(params, exclude_fields={"accession_id"})
-        return await self.get("/v2/studies", params=query)
+        data = await self.get("/v2/studies", params=query)
+        return FetchResult(
+            items=data.get("_embedded", {}).get("studies", []),
+            page=data.get("page"),
+        )
 
-    async def get_study_ancestries(self, accession_id: str) -> dict[str, Any]:
-        return await self.get(f"/v2/studies/{accession_id}/ancestries")
+    async def get_study_ancestries(self, accession_id: str) -> list[dict[str, Any]]:
+        data = await self.get(f"/v2/studies/{accession_id}/ancestries")
+        return data.get("_embedded", {}).get("ancestries", [])
 
-    async def get_associations(self, params: GetAssociationsParams) -> dict[str, Any]:
+    async def get_associations(self, params: GetAssociationsParams) -> FetchResult:
         if params.association_id is not None:
-            return await self.get(f"/v2/associations/{params.association_id}")
+            data = await self.get(f"/v2/associations/{params.association_id}")
+            return FetchResult(items=[data], page=None)
         query = _to_query_params(params, exclude_fields={"association_id"})
-        return await self.get("/v2/associations", params=query)
+        data = await self.get("/v2/associations", params=query)
+        return FetchResult(
+            items=data.get("_embedded", {}).get("associations", []),
+            page=data.get("page"),
+        )
 
-    async def get_association_loci(self, association_id: int) -> dict[str, Any]:
-        return await self.get(f"/v2/associations/{association_id}/loci")
+    async def get_association_loci(self, association_id: int) -> list[dict[str, Any]]:
+        data = await self.get(f"/v2/associations/{association_id}/loci")
+        return data.get("_embedded", {}).get("loci", [])
 
-    async def get_efo_traits(self, params: GetTraitsParams) -> dict[str, Any]:
+    async def get_efo_traits(self, params: GetTraitsParams) -> FetchResult:
         if params.efo_id is not None:
-            return await self.get(f"/v2/efo-traits/{params.efo_id}")
+            data = await self.get(f"/v2/efo-traits/{params.efo_id}")
+            return FetchResult(items=[data], page=None)
         query = _to_query_params(params, exclude_fields={"efo_id"})
-        return await self.get("/v2/efo-traits", params=query)
+        data = await self.get("/v2/efo-traits", params=query)
+        return FetchResult(
+            items=data.get("_embedded", {}).get("efo_traits", []),
+            page=data.get("page"),
+        )

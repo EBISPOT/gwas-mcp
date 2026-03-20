@@ -10,12 +10,13 @@ from gwascatalog.mcp.models.params.types import (
     ExtendedGeneset,
     MappedGene,
     PubmedId,
+    TraitSortKeyField,
 )
 
 
 @final
 class GetTraitsParams(Params):
-    """Parameters for GET https://ebi.ac.uk/gwas/api/rest/v2/traits"""
+    """Parameters for GET https://ebi.ac.uk/gwas/api/rest/v2/efo-traits"""
 
     efo_id: EfoId | None = None
     efo_trait: EfoTrait | None = None
@@ -23,3 +24,4 @@ class GetTraitsParams(Params):
     pubmed_id: PubmedId | None = None
     uri: URI | None = None
     extended_geneset: ExtendedGeneset | None = None
+    sort: TraitSortKeyField | None = None

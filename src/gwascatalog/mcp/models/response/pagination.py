@@ -18,6 +18,7 @@ class PaginationInfo(BaseModel):
             page=self.number,
             total_pages=self.total_pages,
             total_results=self.total_elements,
+            truncated=self.is_truncated,
         )
 
     @property

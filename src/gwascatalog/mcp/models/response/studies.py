@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from gwascatalog.mcp.models.params.types import StudySortKeys
 from gwascatalog.mcp.models.response.ancestry import AncestryResponse
 from gwascatalog.mcp.models.response.traits import EfoTraitResponse
 from gwascatalog.mcp.models.results import StudyResult
@@ -25,6 +26,7 @@ class StudyResponse(BaseModel):
     discovery_ancestry: list[str] = Field(default_factory=list)
     replication_ancestry: list[str] = Field(default_factory=list)
     cohort: list[str] = Field(default_factory=list)
+    sort: StudySortKeys | None = None
 
     def to_result(self, ancestries: list[AncestryResponse]) -> StudyResult:
         return StudyResult(

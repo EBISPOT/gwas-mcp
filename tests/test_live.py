@@ -8,7 +8,12 @@ from __future__ import annotations
 import pytest
 
 from gwascatalog.mcp.client import GwasCatalogClient
-from gwascatalog.mcp.models import GetAssociationsParams, GetStudiesParams, GetTraitsParams
+from gwascatalog.mcp.models import (
+    GetAssociationsParams,
+    GetStudiesParams,
+    GetTraitsParams,
+)
+from gwascatalog.mcp.tools import get_associations
 
 pytestmark = pytest.mark.live
 
@@ -22,19 +27,31 @@ async def client():
 
 async def test_get_studies_by_accession(client):
     params = GetStudiesParams(accession_id="GCST000854")
-    data = await client.get_studies(params)
-    assert data["accession_id"] == "GCST000854"
+    fetch = await client.get_studies(params)
+    assert len(fetch["items"]) == 1
+    assert fetch["items"][0]["accession_id"] == "GCST000854"
+    assert fetch["page"] is None
 
 
 async def test_get_associations_by_trait(client):
     params = GetAssociationsParams(efo_trait="celiac disease", size=1)
-    data = await client.get_associations(params)
-    items = data.get("_embedded", {}).get("associations", [])
-    assert len(items) >= 1
+    fetch = await client.get_associations(params)
+    assert len(fetch["items"]) >= 1
+    assert fetch["page"] is not None
 
 
 async def test_get_traits_by_id(client):
     params = GetTraitsParams(efo_id="EFO_0001060")
-    data = await client.get_efo_traits(params)
-    assert data["efo_id"] == "EFO_0001060"
-    assert "celiac" in data["efo_trait"].lower()
+    fetch = await client.get_efo_traits(params)
+    assert len(fetch["items"]) == 1
+    assert fetch["items"][0]["efo_id"] == "EFO_0001060"
+    assert "celiac" in fetch["items"][0]["efo_trait"].lower()
+    assert fetch["page"] is None
+
+
+async def test_get_associations_tool(client):
+    params = GetAssociationsParams(efo_trait="celiac disease", size=1)
+    result = await get_associations(client=client, params=params)
+    x = result.model_dump()
+    assert x["query"]["efo_trait"] == "celiac disease"
+    assert len(result.data) >= 1

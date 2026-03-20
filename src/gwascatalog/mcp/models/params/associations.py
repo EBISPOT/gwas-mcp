@@ -8,6 +8,7 @@ from gwascatalog.mcp.models.params.base import Params
 from gwascatalog.mcp.models.params.types import (
     AccessionId,
     AssociationId,
+    AssociationSortKeys,
     EfoId,
     EfoTrait,
     FullPValueSet,
@@ -33,3 +34,4 @@ class GetAssociationsParams(Params):
     pubmed_id: PubmedId | None = None
     full_pvalue_set: FullPValueSet | None = None
     show_child_trait: ShowChildTrait | None = None
+    sort: AssociationSortKeys | None = None
