@@ -18,7 +18,5 @@ RUN uv sync --frozen --no-dev --no-editable
 
 EXPOSE 8000
 
-# Override the default host so the server is reachable outside the container
-ENV GWASCATALOG_HOST=0.0.0.0
-
-CMD ["/app/.venv/bin/gwas-mcp", "--transport", "http"]
+ENTRYPOINT ["/app/.venv/bin/gwas-mcp"]
+CMD ["--transport", "http"]
