@@ -10,6 +10,7 @@ service:
   name: gwas-mcp
   port: 80
   containerPort: 8000
+  metricsPort: 9464
 
 ingress:
   name: gwas-mcp

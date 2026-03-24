@@ -17,6 +17,7 @@ COPY src/ ./src/
 RUN uv sync --frozen --no-dev --no-editable
 
 EXPOSE 8000
+EXPOSE 9464
 
 ENTRYPOINT ["/app/.venv/bin/gwas-mcp"]
 CMD ["--transport", "http"]

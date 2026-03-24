@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         app: {{ .Values.service.name }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.service.metricsPort }}"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: {{ .Values.service.name }}
@@ -26,8 +30,13 @@ spec:
               value: "0.0.0.0"
             - name: GWASCATALOG_STREAMABLE_HTTP_PATH
               value: {{ .Values.ingress.mcpPath }}
+            - name: GWASCATALOG_METRICS_PORT
+              value: "{{ .Values.service.metricsPort }}"
           ports:
-            - containerPort: {{ .Values.service.containerPort }}
+            - name: http
+              containerPort: {{ .Values.service.containerPort }}
+            - name: metrics
+              containerPort: {{ .Values.service.metricsPort }}
           resources:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}

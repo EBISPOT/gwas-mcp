@@ -4,11 +4,21 @@ from __future__ import annotations
 
 import argparse
 import logging
+import time
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Literal
 
+from gwascatalog.mcp.telemetry import (
+    init_telemetry,
+    record_list_request,
+    record_resource_access,
+    record_tool_call,
+)
+
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
+
+import httpx
 
 from gwascatalog.mcp.client import GwasCatalogClient
 from gwascatalog.mcp.config import Settings
@@ -85,6 +95,26 @@ def _get_client(ctx: Context) -> GwasCatalogClient:
     return ctx.request_context.lifespan_context["client"]
 
 
+# ---- Listing telemetry ----
+
+_original_list_tools = mcp.list_tools
+_original_list_resources = mcp.list_resources
+
+
+async def _instrumented_list_tools() -> list:
+    record_list_request("tools")
+    return await _original_list_tools()
+
+
+async def _instrumented_list_resources() -> list:
+    record_list_request("resources")
+    return await _original_list_resources()
+
+
+mcp._mcp_server.list_tools()(_instrumented_list_tools)
+mcp._mcp_server.list_resources()(_instrumented_list_resources)
+
+
 # ---- Resources ----
 
 
@@ -99,6 +129,7 @@ def _get_client(ctx: Context) -> GwasCatalogClient:
     mime_type="application/json",
 )
 async def gwascatalog_cohorts() -> dict:
+    record_resource_access("cohorts")
     return await fetch_cohorts()
 
 
@@ -115,6 +146,7 @@ async def gwascatalog_cohorts() -> dict:
     mime_type="application/json",
 )
 def gwascatalog_ancestry_labels() -> dict:
+    record_resource_access("ancestry_labels")
     return read_ancestry_labels()
 
 
@@ -130,6 +162,7 @@ def gwascatalog_ancestry_labels() -> dict:
     mime_type="application/json",
 )
 def gwascatalog_variant_consequences() -> dict:
+    record_resource_access("variant_consequences")
     return read_variant_consequences()
 
 
@@ -144,6 +177,7 @@ def gwascatalog_variant_consequences() -> dict:
     mime_type="application/json",
 )
 def gwascatalog_countries() -> dict:
+    record_resource_access("countries")
     return read_countries()
 
 
@@ -185,11 +219,30 @@ async def gwascatalog_get_traits(
         sort=sort,
         direction=direction,
     )
+    t0 = time.perf_counter()
     try:
-        return await get_traits(client=_get_client(ctx), params=params)
+        result = await get_traits(client=_get_client(ctx), params=params)
+    except httpx.HTTPError:
+        record_tool_call(
+            "get_traits",
+            result_count=0,
+            duration_s=time.perf_counter() - t0,
+            error_type="upstream",
+        )
+        raise
     except Exception:
         logger.exception("gwascatalog_get_traits internal error")
+        record_tool_call(
+            "get_traits",
+            result_count=0,
+            duration_s=time.perf_counter() - t0,
+            error_type="internal",
+        )
         raise
+    record_tool_call(
+        "get_traits", result_count=len(result.data), duration_s=time.perf_counter() - t0
+    )
+    return result
 
 
 # ---- Studies tool ----
@@ -240,11 +293,32 @@ async def gwascatalog_get_studies(
         direction=direction,
     )
 
+    t0 = time.perf_counter()
     try:
-        return await get_studies(client=_get_client(ctx), params=params)
+        result = await get_studies(client=_get_client(ctx), params=params)
+    except httpx.HTTPError:
+        record_tool_call(
+            "get_studies",
+            result_count=0,
+            duration_s=time.perf_counter() - t0,
+            error_type="upstream",
+        )
+        raise
     except Exception:
         logger.exception("gwascatalog_get_studies internal error")
+        record_tool_call(
+            "get_studies",
+            result_count=0,
+            duration_s=time.perf_counter() - t0,
+            error_type="internal",
+        )
         raise
+    record_tool_call(
+        "get_studies",
+        result_count=len(result.data),
+        duration_s=time.perf_counter() - t0,
+    )
+    return result
 
 
 # ---- Associations tool ----
@@ -292,14 +366,35 @@ async def gwascatalog_get_associations(
         direction=direction,
     )
 
+    t0 = time.perf_counter()
     try:
-        return await get_associations(
+        result = await get_associations(
             client=_get_client(ctx),
             params=params,
         )
+    except httpx.HTTPError:
+        record_tool_call(
+            "get_associations",
+            result_count=0,
+            duration_s=time.perf_counter() - t0,
+            error_type="upstream",
+        )
+        raise
     except Exception:
         logger.exception("gwascatalog_get_associations internal error")
+        record_tool_call(
+            "get_associations",
+            result_count=0,
+            duration_s=time.perf_counter() - t0,
+            error_type="internal",
+        )
         raise
+    record_tool_call(
+        "get_associations",
+        result_count=len(result.data),
+        duration_s=time.perf_counter() - t0,
+    )
+    return result
 
 
 # ---- CLI ----
@@ -331,15 +426,13 @@ def main() -> None:
     transport: Literal["streamable-http", "stdio"] = (
         "streamable-http" if args.transport == "http" else "stdio"
     )
-    if args.host is not None:
-        # it took me a long time to figure out that the container was
-        # running on localhost, so manually set here and log
-        mcp.settings.host = args.host
-    if args.port is not None:
-        mcp.settings.port = args.port
+
+    if transport == "streamable-http":
+        logger.info("Starting telemetry server")
+        init_telemetry()
 
     logger.info(
-        "Starting server: transport=%s host=%s port=%s",
+        "Starting MCP server: transport=%s host=%s port=%s",
         transport,
         mcp.settings.host,
         mcp.settings.port,
