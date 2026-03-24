@@ -1,71 +1,76 @@
-"""OpenTelemetry metrics for the GWAS Catalog MCP server."""
+"""OpenTelemetry metrics for the GWAS Catalog MCP server.
+
+Call :func:`init_telemetry` once at process startup (before any tool
+calls) to wire up the Prometheus exporter and create instruments.
+"""
 
 from __future__ import annotations
 
+import logging
 import os
-import time
 
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.resources import Resource
 from prometheus_client import start_http_server
 
 _METRICS_PORT = int(os.getenv("GWASCATALOG_METRICS_PORT", "9464"))
-_initialized = False
+logger = logging.getLogger(__name__)
+
+_provider: MeterProvider | None = None
+
+# Populated by init_telemetry(); safe to reference (but no-ops) before then.
+tool_calls = None
+tool_results = None
+resource_accesses = None
+tool_duration = None
 
 
 def init_telemetry() -> None:
-    """Set up the OTel MeterProvider with a Prometheus exporter.
+    """Create the OTel MeterProvider, instruments, and ``/metrics`` endpoint.
 
-    Starts a Prometheus-compatible ``/metrics`` HTTP endpoint on
-    ``GWASCATALOG_METRICS_PORT`` (default 9464).  Safe to call more than once;
-    subsequent calls are no-ops.
+    Idempotent — subsequent calls are no-ops.  A synthetic ``_startup_check``
+    counter event is recorded so that at least one ``gwascatalog_*`` metric
+    is immediately visible on ``/metrics``.
     """
-    global _initialized  # noqa: PLW0603
-    if _initialized:
+    global _provider, tool_calls, tool_results  # noqa: PLW0603
+    global resource_accesses, tool_duration  # noqa: PLW0603
+
+    if _provider is not None:
         return
 
     resource = Resource.create({"service.name": "gwascatalog-mcp"})
     reader = PrometheusMetricReader()
-    provider = MeterProvider(resource=resource, metric_readers=[reader])
-    set_meter_provider(provider)
-    start_http_server(port=_METRICS_PORT)
-    _initialized = True
+    _provider = MeterProvider(resource=resource, metric_readers=[reader])
 
+    meter = _provider.get_meter("gwascatalog.mcp")
 
-_meter = get_meter_provider().get_meter("gwascatalog.mcp")
+    tool_calls = meter.create_counter(
+        name="gwascatalog.tool.calls",
+        description="Total MCP tool invocations",
+        unit="1",
+    )
+    tool_results = meter.create_counter(
+        name="gwascatalog.tool.results",
+        description="MCP tool results partitioned by outcome",
+        unit="1",
+    )
+    resource_accesses = meter.create_counter(
+        name="gwascatalog.resource.accesses",
+        description="Total MCP resource accesses",
+        unit="1",
+    )
+    tool_duration = meter.create_histogram(
+        name="gwascatalog.tool.duration",
+        description="Tool call duration",
+        unit="s",
+    )
 
-# ---- Counters ----
+    start_http_server(port=_METRICS_PORT, addr="0.0.0.0")
 
-tool_call_counter = _meter.create_counter(
-    name="gwascatalog.tool.calls",
-    description="Total MCP tool invocations",
-    unit="1",
-)
-
-tool_result_counter = _meter.create_counter(
-    name="gwascatalog.tool.results",
-    description="MCP tool invocations partitioned by whether results were returned",
-    unit="1",
-)
-
-resource_access_counter = _meter.create_counter(
-    name="gwascatalog.resource.accesses",
-    description="Total MCP resource accesses",
-    unit="1",
-)
-
-# ---- Histogram ----
-
-tool_duration_histogram = _meter.create_histogram(
-    name="gwascatalog.tool.duration",
-    description="Tool call duration in seconds",
-    unit="s",
-)
-
-
-# ---- Helpers ----
+    # Record a synthetic event so custom metrics are visible immediately.
+    tool_calls.add(1, {"tool": "_startup_check", "status": "ok"})
+    logger.info("Telemetry initialised, metrics at :%d/metrics", _METRICS_PORT)
 
 
 def record_tool_call(
@@ -76,29 +81,18 @@ def record_tool_call(
     error: bool = False,
 ) -> None:
     """Record metrics for a single tool invocation."""
+    if tool_calls is None:
+        return
     status = "error" if error else "ok"
-    tool_call_counter.add(1, {"tool": tool_name, "status": status})
-    tool_duration_histogram.record(duration_s, {"tool": tool_name})
+    tool_calls.add(1, {"tool": tool_name, "status": status})
+    tool_duration.record(duration_s, {"tool": tool_name})
     if not error:
         has_results = "true" if result_count > 0 else "false"
-        tool_result_counter.add(1, {"tool": tool_name, "has_results": has_results})
+        tool_results.add(1, {"tool": tool_name, "has_results": has_results})
 
 
 def record_resource_access(resource_name: str) -> None:
     """Record a resource read / list access."""
-    resource_access_counter.add(1, {"resource": resource_name})
-
-
-class ToolTimer:
-    """Simple context-manager to measure elapsed wall-clock time."""
-
-    def __init__(self) -> None:
-        self.elapsed: float = 0.0
-        self._start: float = 0.0
-
-    def __enter__(self) -> ToolTimer:
-        self._start = time.perf_counter()
-        return self
-
-    def __exit__(self, *_: object) -> None:
-        self.elapsed = time.perf_counter() - self._start
+    if resource_accesses is None:
+        return
+    resource_accesses.add(1, {"resource": resource_name})
