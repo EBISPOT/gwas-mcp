@@ -24,6 +24,7 @@ tool_calls = None
 tool_results = None
 resource_accesses = None
 tool_duration = None
+list_requests = None
 
 
 def init_telemetry() -> None:
@@ -34,7 +35,7 @@ def init_telemetry() -> None:
     is immediately visible on ``/metrics``.
     """
     global _provider, tool_calls, tool_results  # noqa: PLW0603
-    global resource_accesses, tool_duration  # noqa: PLW0603
+    global resource_accesses, tool_duration, list_requests  # noqa: PLW0603
 
     if _provider is not None:
         return
@@ -64,6 +65,11 @@ def init_telemetry() -> None:
         name="gwascatalog.tool.duration",
         description="Tool call duration",
         unit="s",
+    )
+    list_requests = meter.create_counter(
+        name="gwascatalog.list.requests",
+        description="Total MCP list requests (tools/resources)",
+        unit="1",
     )
 
     start_http_server(port=_METRICS_PORT, addr="0.0.0.0")
@@ -96,3 +102,10 @@ def record_resource_access(resource_name: str) -> None:
     if resource_accesses is None:
         return
     resource_accesses.add(1, {"resource": resource_name})
+
+
+def record_list_request(kind: str) -> None:
+    """Record a tools/list or resources/list request."""
+    if list_requests is None:
+        return
+    list_requests.add(1, {"kind": kind})

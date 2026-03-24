@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from gwascatalog.mcp.telemetry import (
     init_telemetry,
+    record_list_request,
     record_resource_access,
     record_tool_call,
 )
@@ -90,6 +91,26 @@ mcp = FastMCP(
 
 def _get_client(ctx: Context) -> GwasCatalogClient:
     return ctx.request_context.lifespan_context["client"]
+
+
+# ---- Listing telemetry ----
+
+_original_list_tools = mcp.list_tools
+_original_list_resources = mcp.list_resources
+
+
+async def _instrumented_list_tools() -> list:
+    record_list_request("tools")
+    return await _original_list_tools()
+
+
+async def _instrumented_list_resources() -> list:
+    record_list_request("resources")
+    return await _original_list_resources()
+
+
+mcp._mcp_server.list_tools()(_instrumented_list_tools)
+mcp._mcp_server.list_resources()(_instrumented_list_resources)
 
 
 # ---- Resources ----
