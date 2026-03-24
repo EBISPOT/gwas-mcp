@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from io import StringIO
 
 import httpx
 
-from gwascatalog.mcp.resources.static import ColumnarData, _csv_to_columnar
+from gwascatalog.mcp.resources.static import (
+    ColumnarData,
+    _csv_to_columnar,
+    _read_data_file,
+)
+
+logger = logging.getLogger(__name__)
 
 _COHORTS_URL = (
     "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata_cohorts.csv"
@@ -34,13 +41,22 @@ async def fetch_cohorts() -> ColumnarData:
         if _cached_data is not None and (now - _cached_at) < _CACHE_TTL_SECONDS:
             return _cached_data
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(_COHORTS_URL, timeout=30)
-            response.raise_for_status()
-            data = _csv_to_columnar(StringIO(response.text))
-            # remove the third column to save tokens
-            data.pop("Previous/other/additional names", None)
-            _cached_data = data
-            _cached_at = time.monotonic()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    _COHORTS_URL, timeout=2, follow_redirects=True
+                )
+                response.raise_for_status()
+                data = _csv_to_columnar(StringIO(response.text))
+                # remove the third column to save tokens
+                data.pop("Previous/other/additional names", None)
+                _cached_data = data
+                _cached_at = time.monotonic()
+        except Exception:
+            logger.exception(
+                f"Failed to fetch cohorts from {_COHORTS_URL}; using cached data"
+            )
+            if _cached_data is None:
+                _cached_data = _read_data_file("cohorts.csv")
 
     return _cached_data
