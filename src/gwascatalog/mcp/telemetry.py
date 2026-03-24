@@ -84,15 +84,19 @@ def record_tool_call(
     *,
     result_count: int,
     duration_s: float,
-    error: bool = False,
+    error_type: str | None = None,
 ) -> None:
-    """Record metrics for a single tool invocation."""
+    """Record metrics for a single tool invocation.
+
+    error_type: None for success; "upstream" for GWAS API failures;
+                "internal" for unexpected exceptions.
+    """
     if tool_calls is None:
         return
-    status = "error" if error else "ok"
+    status = error_type if error_type is not None else "ok"
     tool_calls.add(1, {"tool": tool_name, "status": status})
     tool_duration.record(duration_s, {"tool": tool_name})
-    if not error:
+    if error_type is None:
         has_results = "true" if result_count > 0 else "false"
         tool_results.add(1, {"tool": tool_name, "has_results": has_results})
 

@@ -18,6 +18,8 @@ from gwascatalog.mcp.telemetry import (
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
+import httpx
+
 from gwascatalog.mcp.client import GwasCatalogClient
 from gwascatalog.mcp.config import Settings
 from gwascatalog.mcp.constants import (
@@ -220,13 +222,21 @@ async def gwascatalog_get_traits(
     t0 = time.perf_counter()
     try:
         result = await get_traits(client=_get_client(ctx), params=params)
+    except httpx.HTTPError:
+        record_tool_call(
+            "get_traits",
+            result_count=0,
+            duration_s=time.perf_counter() - t0,
+            error_type="upstream",
+        )
+        raise
     except Exception:
         logger.exception("gwascatalog_get_traits internal error")
         record_tool_call(
             "get_traits",
             result_count=0,
             duration_s=time.perf_counter() - t0,
-            error=True,
+            error_type="internal",
         )
         raise
     record_tool_call(
@@ -286,13 +296,21 @@ async def gwascatalog_get_studies(
     t0 = time.perf_counter()
     try:
         result = await get_studies(client=_get_client(ctx), params=params)
+    except httpx.HTTPError:
+        record_tool_call(
+            "get_studies",
+            result_count=0,
+            duration_s=time.perf_counter() - t0,
+            error_type="upstream",
+        )
+        raise
     except Exception:
         logger.exception("gwascatalog_get_studies internal error")
         record_tool_call(
             "get_studies",
             result_count=0,
             duration_s=time.perf_counter() - t0,
-            error=True,
+            error_type="internal",
         )
         raise
     record_tool_call(
@@ -354,13 +372,21 @@ async def gwascatalog_get_associations(
             client=_get_client(ctx),
             params=params,
         )
+    except httpx.HTTPError:
+        record_tool_call(
+            "get_associations",
+            result_count=0,
+            duration_s=time.perf_counter() - t0,
+            error_type="upstream",
+        )
+        raise
     except Exception:
         logger.exception("gwascatalog_get_associations internal error")
         record_tool_call(
             "get_associations",
             result_count=0,
             duration_s=time.perf_counter() - t0,
-            error=True,
+            error_type="internal",
         )
         raise
     record_tool_call(

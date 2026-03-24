@@ -64,7 +64,12 @@ def test_record_tool_call():
     port = int(os.environ["GWASCATALOG_METRICS_PORT"])
 
     telemetry.record_tool_call("test_tool", result_count=3, duration_s=0.42)
-    telemetry.record_tool_call("test_tool", result_count=0, duration_s=0.1, error=True)
+    telemetry.record_tool_call(
+        "test_tool", result_count=0, duration_s=0.1, error_type="upstream"
+    )
+    telemetry.record_tool_call(
+        "test_tool", result_count=0, duration_s=0.1, error_type="internal"
+    )
 
     body = urllib.request.urlopen(f"http://127.0.0.1:{port}/metrics").read().decode()
 
