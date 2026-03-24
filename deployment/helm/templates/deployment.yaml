@@ -21,8 +21,11 @@ spec:
           args:
             - "--transport"
             - "http"
-            - "--host"
-            - "0.0.0.0"
+          env:
+            - name: GWASCATALOG_HOST
+              value: "0.0.0.0"
+            - name: GWASCATALOG_STREAMABLE_HTTP_PATH
+              value: {{ .Values.ingress.mcpPath }}
           ports:
             - containerPort: {{ .Values.service.containerPort }}
           resources:

@@ -14,7 +14,8 @@ service:
 ingress:
   name: gwas-mcp
   annotations: {}
-  path: "/gwas/api/mcp(/|$)(.*)"
+  path: "/gwas/api/mcp"
+  mcpPath: "/gwas/api/mcp"
 
 resources:
   limits:

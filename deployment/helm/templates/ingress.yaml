@@ -3,9 +3,7 @@ kind: Ingress
 metadata:
   name: {{.Values.ingress.name}}
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
   - http:
