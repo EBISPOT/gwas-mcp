@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 from pydantic import BaseModel, Field
 
 from gwascatalog.mcp.models.response.traits import EfoTraitResponse
@@ -27,7 +25,7 @@ class AssociationResponse(BaseModel):
     snp_effect_allele: list[str] = Field(default_factory=list)
     snp_allele: list[dict] = Field(default_factory=list)
 
-    def to_result(self, loci_data: list[dict[str, Any]]) -> AssociationResult:
+    def to_result(self) -> AssociationResult:
         return AssociationResult(
             association_id=self.association_id,
             risk_frequency=self.risk_frequency,
@@ -46,5 +44,4 @@ class AssociationResponse(BaseModel):
             ci_upper=self.ci_upper,
             snp_effect_allele=self.snp_effect_allele,
             snp_allele=self.snp_allele,
-            loci=loci_data,
         )

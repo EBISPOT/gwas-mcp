@@ -30,4 +30,3 @@ class AssociationResult(BaseResult):
     ci_upper: float | None = None
     snp_effect_allele: list[str] = Field(default_factory=list)
     snp_allele: list[dict[str, Any]] = Field(default_factory=list)
-    loci: list[dict[str, Any]] = Field(default_factory=list)

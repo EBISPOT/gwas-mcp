@@ -229,8 +229,6 @@ async def test_get_associations_list(mock_ctx, mock_client):
         },
     }
 
-    mock_client.get_association_loci.return_value = []
-
     result = await gwascatalog_get_associations(
         mock_ctx,
         efo_trait="celiac disease",
@@ -269,7 +267,6 @@ async def test_get_associations_detail(mock_ctx, mock_client):
         ],
         "page": None,
     }
-    mock_client.get_association_loci.return_value = []
 
     result = await gwascatalog_get_associations(
         mock_ctx,
