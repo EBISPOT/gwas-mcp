@@ -185,7 +185,11 @@ async def gwascatalog_get_traits(
         sort=sort,
         direction=direction,
     )
-    return await get_traits(client=_get_client(ctx), params=params)
+    try:
+        return await get_traits(client=_get_client(ctx), params=params)
+    except Exception:
+        logger.exception("gwascatalog_get_traits internal error")
+        raise
 
 
 # ---- Studies tool ----
@@ -236,7 +240,11 @@ async def gwascatalog_get_studies(
         direction=direction,
     )
 
-    return await get_studies(client=_get_client(ctx), params=params)
+    try:
+        return await get_studies(client=_get_client(ctx), params=params)
+    except Exception:
+        logger.exception("gwascatalog_get_studies internal error")
+        raise
 
 
 # ---- Associations tool ----
@@ -284,10 +292,14 @@ async def gwascatalog_get_associations(
         direction=direction,
     )
 
-    return await get_associations(
-        client=_get_client(ctx),
-        params=params,
-    )
+    try:
+        return await get_associations(
+            client=_get_client(ctx),
+            params=params,
+        )
+    except Exception:
+        logger.exception("gwascatalog_get_associations internal error")
+        raise
 
 
 # ---- CLI ----
