@@ -54,26 +54,6 @@ class RateLimiter:
                 self._tokens -= 1.0
 
 
-def _to_query_params(
-    params: Any,
-    exclude_fields: set[str] | None = None,
-) -> dict[str, Any]:
-    """Convert a parameter model to API query params with camelCase keys."""
-    exclude = exclude_fields or set()
-    result: dict[str, Any] = {}
-    for field_name, value in params.model_dump(exclude_none=True).items():
-        if field_name in exclude:
-            continue
-        # snake_case -> camelCase
-        parts = field_name.split("_")
-        camel = parts[0] + "".join(p.capitalize() for p in parts[1:])
-        if isinstance(value, bool):
-            result[camel] = str(value).lower()
-        else:
-            result[camel] = value
-    return result
-
-
 class GwasCatalogClient:
     def __init__(self, base_url: str, timeout_seconds: float) -> None:
         self._client = httpx.AsyncClient(
@@ -111,7 +91,7 @@ class GwasCatalogClient:
             except NotFoundError:
                 return FetchResult(items=[], page=None)
             return FetchResult(items=[data], page=None)
-        query = _to_query_params(params, exclude_fields={"accession_id"})
+        query = params.model_dump(exclude_none=True)
         data = await self.get("/v2/studies", params=query)
         return FetchResult(
             items=data.get("_embedded", {}).get("studies", []),
@@ -129,7 +109,7 @@ class GwasCatalogClient:
             except NotFoundError:
                 return FetchResult(items=[], page=None)
             return FetchResult(items=[data], page=None)
-        query = _to_query_params(params, exclude_fields={"association_id"})
+        query = params.model_dump(exclude_none=True)
         data = await self.get("/v2/associations", params=query)
         return FetchResult(
             items=data.get("_embedded", {}).get("associations", []),
@@ -147,7 +127,7 @@ class GwasCatalogClient:
             except NotFoundError:
                 return FetchResult(items=[], page=None)
             return FetchResult(items=[data], page=None)
-        query = _to_query_params(params, exclude_fields={"efo_id"})
+        query = params.model_dump(exclude_none=True)
         data = await self.get("/v2/efo-traits", params=query)
         return FetchResult(
             items=data.get("_embedded", {}).get("efo_traits", []),

@@ -13,7 +13,7 @@ from gwascatalog.mcp.models import (
     GetStudiesParams,
     GetTraitsParams,
 )
-from gwascatalog.mcp.tools import get_associations
+from gwascatalog.mcp.tools import get_associations, get_studies
 
 pytestmark = pytest.mark.live
 
@@ -55,3 +55,13 @@ async def test_get_associations_tool(client):
     x = result.model_dump()
     assert x["query"]["efo_trait"] == "celiac disease"
     assert len(result.data) >= 1
+
+
+async def test_get_studies_tool(client):
+    params = GetStudiesParams(efo_id="MONDO_0004979")
+    result = await get_studies(client=client, params=params)
+    traits = [x.efo_traits for x in result.data]
+    flat_list = [x for xs in traits for x in xs]
+
+    # every study must include MONDO_0004979's trait label (asthma)
+    assert sum("asthma" in x.efo_trait for x in flat_list) == params.size
