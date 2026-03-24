@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -54,6 +55,7 @@ from gwascatalog.mcp.tools import get_associations, get_studies, get_traits
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.types import ToolAnnotations
 
+logger = logging.getLogger(__name__)
 settings = Settings()
 MCP_TOOL_ANNOTATIONS = ToolAnnotations(
     readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
@@ -74,7 +76,6 @@ mcp = FastMCP(
     instructions=GWASCATALOG_MCP_INSTRUCTIONS,
     host=settings.host,
     port=settings.port,
-    mount_path=settings.mount_path,
     streamable_http_path=settings.streamable_http_path,
     lifespan=lifespan,
 )
@@ -300,6 +301,16 @@ def _parse_args() -> argparse.Namespace:
         default="stdio",
         help="Transport mode: stdio or streamable HTTP.",
     )
+    parser.add_argument(
+        "--host",
+        default=None,
+        help="Host address to bind to. Use 0.0.0.0 for containers.",
+    )
+    parser.add_argument(
+        "--port",
+        default=None,
+        help="Port to bind to. Defaults to 8000.",
+    )
     return parser.parse_args()
 
 
@@ -307,6 +318,19 @@ def main() -> None:
     args = _parse_args()
     transport: Literal["streamable-http", "stdio"] = (
         "streamable-http" if args.transport == "http" else "stdio"
+    )
+    if args.host is not None:
+        # it took me a long time to figure out that the container was
+        # running on localhost, so manually set here and log
+        mcp.settings.host = args.host
+    if args.port is not None:
+        mcp.settings.port = args.port
+
+    logger.info(
+        "Starting server: transport=%s host=%s port=%s",
+        transport,
+        mcp.settings.host,
+        mcp.settings.port,
     )
     mcp.run(transport=transport)
 

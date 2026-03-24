@@ -18,6 +18,11 @@ spec:
         - name: {{ .Values.service.name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "--transport"
+            - "http"
+            - "--host"
+            - "0.0.0.0"
           ports:
             - containerPort: {{ .Values.service.containerPort }}
           resources:
