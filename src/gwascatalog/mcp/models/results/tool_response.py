@@ -61,6 +61,11 @@ def _build_suggestions(
                 "Consider adding filters to narrow results "
                 "(e.g. efo_id, mapped_gene, pubmed_id)."
             )
+            # gate this suggestion to appear only for exploratory queries
+            suggestions.append(
+                "This page may provide a useful overview. Fetch additional pages only "
+                "if more detailed results are needed."
+            )
 
     return suggestions
 
