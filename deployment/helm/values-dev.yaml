@@ -18,6 +18,9 @@ ingress:
   path: "/gwas/api/mcp"
   mcpPath: "/gwas/api/mcp"
 
+env:
+  httpProxy: "http://hh-wwwcache.ebi.ac.uk:3128"
+
 resources:
   limits:
     cpu: 1

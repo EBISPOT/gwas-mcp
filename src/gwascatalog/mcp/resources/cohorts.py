@@ -9,6 +9,7 @@ from io import StringIO
 
 import httpx
 
+from gwascatalog.mcp.constants import HTTP_PROXY
 from gwascatalog.mcp.resources.static import (
     ColumnarData,
     _csv_to_columnar,
@@ -41,8 +42,13 @@ async def fetch_cohorts() -> ColumnarData:
         if _cached_data is not None and (now - _cached_at) < _CACHE_TTL_SECONDS:
             return _cached_data
 
+        if HTTP_PROXY is None:
+            logger.info("No proxy is set")
+        else:
+            logger.info(f"{HTTP_PROXY=}")
+
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(proxy=HTTP_PROXY) as client:
                 response = await client.get(
                     _COHORTS_URL, timeout=2, follow_redirects=True
                 )

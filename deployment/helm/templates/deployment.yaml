@@ -32,6 +32,8 @@ spec:
               value: {{ .Values.ingress.mcpPath }}
             - name: GWASCATALOG_METRICS_PORT
               value: "{{ .Values.service.metricsPort }}"
+            - name: GWASCATALOG_HTTP_PROXY
+              value: {{ .Values.env.httpProxy }}
           ports:
             - name: http
               containerPort: {{ .Values.service.containerPort }}

@@ -1,3 +1,5 @@
+import os
+
 GWASCATALOG_MCP_INSTRUCTIONS = """
 Provides access to curated results from the GWAS Catalog, a     database of
 published human genome-wide association (GWAS) studies
@@ -22,3 +24,5 @@ TRAIT_SEARCH_GUIDANCE = (
     "'response to COVID-19 vaccine'.\n\n"
     "For precision, prefer EFO IDs (e.g. MONDO_0004979) over names."
 )
+
+HTTP_PROXY = os.getenv("GWASCATALOG_HTTP_PROXY", None)
