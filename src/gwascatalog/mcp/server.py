@@ -190,8 +190,25 @@ This tool can be helpful to explore the traits present in the GWAS Catalog. If
 the trait is present in the GWAS Catalog, there will be studies
 and associations linked with it.
 
-If a trait doesn't appear in the GWAS Catalog, try searching with efo_trait which
-will return any traits including the term. efo_id is most precise.
+Trait search guidance:
+
+If an EFO trait id doesn't appear in the GWAS Catalog, try searching with efo_trait
+instead.
+
+This will do simple text matching to return any traits that include the term.
+
+efo_id is most precise and will return a single result generally.
+
+CAUTION: Trait synonyms are not matched when searching efo_trait. For example:
+
+- MONDO_0005148 is equivalent to "type 2 diabetes mellitus"
+- Searching efo_trait with "type 2 diabetes mellitus" will return a result including
+MONDO_0005148
+- However, searching efo_trait with "adult-onset diabetes" (which is a MONDO_0005148
+synonym) will not return any results
+
+In this case try searching more general terms to find traits (e.g. "type 2 diabetes")
+before filtering them.
 """
 
 
