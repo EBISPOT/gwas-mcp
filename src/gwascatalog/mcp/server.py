@@ -192,8 +192,7 @@ and associations linked with it.
 
 Trait search guidance:
 
-If an EFO trait id doesn't appear in the GWAS Catalog, try searching with efo_trait
-instead.
+If an efo_id doesn't appear in the GWAS Catalog, try searching with efo_trait instead.
 
 This will do simple text matching to return any traits that include the term.
 
