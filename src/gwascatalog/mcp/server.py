@@ -342,6 +342,13 @@ async def gwascatalog_get_studies(
 ASSOCATION_TOOL_DESCRIPTION = f"""
 Find variant-trait associations with statistical details from the GWAS Catalog.
 
+Result sorting guidance:
+
+1. To identify the most statistically significant results, sort by pvalue ascending.
+2. To identify the largest positive effects, sort by or_value descending.
+3. To identify the strongest protective effects (odds ratios below 1), sort by or_value
+ascending.
+
 Trait search guidance:
 
 {TRAIT_SEARCH_GUIDANCE}
