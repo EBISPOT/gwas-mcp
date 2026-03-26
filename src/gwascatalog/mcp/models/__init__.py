@@ -27,13 +27,6 @@ from gwascatalog.mcp.models.params import (
     StudySortKeyField,
     TraitSortKeyField,
 )
-from gwascatalog.mcp.models.response import (
-    AncestryResponse,
-    AssociationResponse,
-    EfoTraitResponse,
-    PaginationInfo,
-    StudyResponse,
-)
 from gwascatalog.mcp.models.results import (
     AncestryResult,
     AssociationResult,
@@ -44,17 +37,12 @@ from gwascatalog.mcp.models.results import (
 )
 
 __all__ = [
-    "AncestryResponse",
     "AncestryResult",
-    "AssociationResponse",
     "AssociationResult",
-    "EfoTraitResponse",
     "GetAssociationsParams",
     "GetStudiesParams",
     "GetTraitsParams",
     "PageSummary",
-    "PaginationInfo",
-    "StudyResponse",
     "StudyResult",
     "ToolResponse",
     "TraitResult",

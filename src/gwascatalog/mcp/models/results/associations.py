@@ -119,17 +119,17 @@ class AssociationResult(BaseResult):
     """A single variant-trait association result with loci details."""
 
     association_id: AssociationIdField
-    risk_frequency: RiskFrequencyField
-    p_value: PValueField
-    pvalue_description: PValueDescriptionField
+    risk_frequency: RiskFrequencyField = None
+    p_value: PValueField | None = None
+    pvalue_description: PValueDescriptionField = None
     pvalue_mantissa: PValueMantissaField | None = None
     pvalue_exponent: PValueExponentField | None = None
     beta: BetaField | None = None
     or_value: OrValue | None = None
-    range: RangeField
+    range: RangeField | None = None
     efo_traits: EfoTraitsField = Field(default_factory=list)
     reported_trait: ReportedTraitField = Field(default_factory=list)
-    accession_id: AccessionIdField
+    accession_id: AccessionIdField | None = None
     locations: LocationsField = Field(default_factory=list)
     mapped_genes: list[MappedGene] = Field(default_factory=list)
     pubmed_id: PubmedId | None = None

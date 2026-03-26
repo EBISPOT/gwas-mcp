@@ -7,7 +7,6 @@ from typing import Any, TypeVar
 from pydantic import BaseModel, ConfigDict, Field
 
 from gwascatalog.mcp.models.params.base import Params
-from gwascatalog.mcp.models.response.pagination import PaginationInfo
 from gwascatalog.mcp.models.results.pagination import PageSummary
 
 T = TypeVar("T")
@@ -108,13 +107,12 @@ class ToolResponse[T](BaseModel):
                 message=message,
                 suggestions=_build_suggestions(params, len(results), pagination),
             )
-        page_info = PaginationInfo.model_validate(page_data)
-        pagination = page_info.to_summary()
+        page_info = PageSummary.model_validate(page_data)
         message = "No results found in the GWAS Catalog." if not results else None
         return cls(
             query=params.model_dump(exclude_none=True),
             data=results,
-            pagination=pagination,
+            pagination=page_info,
             message=message,
-            suggestions=_build_suggestions(params, len(results), pagination),
+            suggestions=_build_suggestions(params, len(results), page_info),
         )
