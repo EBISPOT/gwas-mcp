@@ -12,6 +12,9 @@ class AssociationResponse(BaseModel):
     pvalue_description: str | None = None
     range: str | None = None
     beta: str | None = None
+    or_value: str | None = None
+    pvalue_mantissa: int | None = None
+    pvalue_exponent: int | None = None
     p_value: float | None = None
     efo_traits: list[EfoTraitResponse] = Field(default_factory=list)
     reported_trait: list[str] = Field(default_factory=list)
@@ -40,8 +43,8 @@ class AssociationResponse(BaseModel):
             mapped_genes=self.mapped_genes,
             pubmed_id=self.pubmed_id,
             first_author=self.first_author,
-            ci_lower=self.ci_lower,
-            ci_upper=self.ci_upper,
             snp_effect_allele=self.snp_effect_allele,
-            snp_allele=self.snp_allele,
+            or_value=self.or_value,
+            pvalue_mantissa=self.pvalue_mantissa,
+            pvalue_exponent=self.pvalue_exponent,
         )

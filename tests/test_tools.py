@@ -213,12 +213,6 @@ async def test_get_associations_list(mock_ctx, mock_client):
                 ],
                 "accession_id": "GCST90468120",
                 "snp_effect_allele": ["rs9277626-G"],
-                "snp_allele": [
-                    {
-                        "rs_id": "rs9277626",
-                        "effect_allele": "G",
-                    }
-                ],
             }
         ],
         "page": {
@@ -236,7 +230,6 @@ async def test_get_associations_list(mock_ctx, mock_client):
     assert len(result.data) == 1
     r = result.data[0]
     assert r.association_id == 188116214
-    assert r.snp_allele[0]["rs_id"] == "rs9277626"
     assert "HLA-DPB2" in r.mapped_genes
     assert r.p_value == 2e-13
     assert result.pagination.total_results == 1
@@ -262,7 +255,6 @@ async def test_get_associations_detail(mock_ctx, mock_client):
                 ],
                 "accession_id": "GCST90468120",
                 "snp_effect_allele": ["rs9277626-G"],
-                "snp_allele": [{"rs_id": "rs9277626", "effect_allele": "G"}],
             }
         ],
         "page": None,
@@ -275,7 +267,6 @@ async def test_get_associations_detail(mock_ctx, mock_client):
     assert len(result.data) == 1
     r = result.data[0]
     assert r.association_id == 188116214
-    assert r.snp_allele[0]["rs_id"] == "rs9277626"
     assert "HLA-DPB2" in r.mapped_genes
     assert result.pagination.total_results == 1
     assert result.pagination.truncated is False
