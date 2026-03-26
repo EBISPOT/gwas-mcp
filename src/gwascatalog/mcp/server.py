@@ -163,6 +163,11 @@ or
 1. Find traits using gwascatalog_get_traits
 2. Retrieve SNP associations using gwascatalog_get_associations with the returned trait
 
+## When presenting results
+
+* When summarising a study, include ancestry information to provide context for the
+study population.
+
 ## Available resources
 
 - gwascatalog://docs/index
