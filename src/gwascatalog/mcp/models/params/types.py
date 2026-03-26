@@ -75,7 +75,7 @@ MappedGene = Annotated[
 PageField = Annotated[int, Field(ge=0, description="Zero-based page index")]
 
 SizeField = Annotated[
-    int, Field(ge=1, lt=50, description="The size of the page to be returned")
+    int, Field(ge=1, le=50, description="The size of the page to be returned")
 ]
 
 FullPValueSet = Annotated[
