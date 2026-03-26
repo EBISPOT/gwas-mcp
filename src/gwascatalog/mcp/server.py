@@ -57,6 +57,7 @@ from gwascatalog.mcp.models import (
 )
 from gwascatalog.mcp.resources import (
     fetch_cohorts,
+    fetch_schema,
     read_ancestry_labels,
     read_countries,
     read_variant_consequences,
@@ -118,8 +119,107 @@ mcp._mcp_server.list_resources()(_instrumented_list_resources)
 # ---- Resources ----
 
 
+_RESOURCE_INDEX = """\
+GWAS Catalog MCP — resource index
+==================================
+
+Capabilities (human GWAS data):
+
+Traits (EFO traits): gwascatalog_get_traits
+Studies (GWAS studies): gwascatalog_get_studies
+Associations (variant-trait): gwascatalog_get_associations
+
+## Use tools first
+
+Resources contain static reference lists and are usually not required for
+typical GWAS queries.
+
+The MCP tools query live GWAS Catalog data and should be your first choice:
+
+- gwascatalog_get_traits
+  Returns: EFO trait metadata
+  Query by: EFO ID, trait name, mapped gene, PubMed ID, URI
+- gwascatalog_get_studies
+  Returns: GWAS study metadata
+  Query by: study accession, trait, gene, ancestry, cohort, PubMed ID
+- gwascatalog_get_associations
+  Returns: SNP-trait association records
+  Query by: association ID, trait, gene, variant, study accession, PubMed ID
+
+Load a resource only when you need a controlled vocabulary or valid identifier.
+
+Examples:
+- checking valid ancestry labels
+- validating cohort identifiers
+- verifying variant consequence terms
+
+## Typical workflows:
+
+1. Find traits using gwascatalog_get_traits
+2. Find related studies using gwascatalog_get_studies with the returned trait
+
+or
+
+1. Find traits using gwascatalog_get_traits
+2. Retrieve SNP associations using gwascatalog_get_associations with the returned trait
+
+## Available resources
+
+- gwascatalog://docs/index
+    Use when: first accessing the MCP to understand available resources
+    Content: This index of resources and usage guidance
+    Refresh: Static
+- gwascatalog://reference/cohorts
+    Use when: validating cohort identifiers
+    Content: PGS Catalog cohort IDs and names
+    Refresh: 24 h
+- gwascatalog://reference/ancestry-labels
+    Use when: validating ancestry group labels
+    Content: Ancestry categories, descriptions, and example sub-populations
+    Refresh: Static
+- gwascatalog://reference/variant-consequences
+    Use when: validating variant consequence terms
+    Content: Sequence Ontology terms, accessions, display names, and IMPACT ratings
+    Refresh: Static
+- gwascatalog://reference/countries
+    Use when: validating country names
+    Content: Country names and codes
+    Refresh: Static
+- gwascatalog://reference/openapi-schema
+    Use when: building custom integrations or processing large datasets outside MCP
+    Content: OpenAPI schema for GWAS Catalog REST API v2
+    Refresh: 24 h
+
+## Custom integrations
+
+If you need to query or process very large amounts of GWAS Catalog data, then write
+a custom integration with the GWAS Catalog REST API.
+
+Use gwascatalog://reference/openapi-schema only for building external integrations
+or processing very large datasets outside MCP.
+
+Normal analysis tasks should use MCP tools.
+"""
+
+
 @mcp.resource(
-    "gwascatalog://cohorts",
+    "gwascatalog://docs/index",
+    name="index",
+    title="GWAS Catalog MCP Resource Index",
+    description=(
+        "Compact index of all available resources with brief descriptions. "
+        "Read this first to decide which resource (if any) to load. "
+        "Prefer MCP tools over resources for live data queries."
+    ),
+    mime_type="text/plain",
+)
+def gwascatalog_index() -> str:
+    record_resource_access("index")
+    return _RESOURCE_INDEX
+
+
+@mcp.resource(
+    "gwascatalog://reference/cohorts",
     name="cohorts",
     title="GWAS Catalog Cohorts",
     description=(
@@ -151,7 +251,7 @@ def gwascatalog_ancestry_labels() -> dict:
 
 
 @mcp.resource(
-    "gwascatalog://variant-consequences",
+    "gwascatalog://reference/variant-consequences",
     name="variant_consequences",
     title="Ensembl Variant Consequences",
     description=(
@@ -167,7 +267,7 @@ def gwascatalog_variant_consequences() -> dict:
 
 
 @mcp.resource(
-    "gwascatalog://countries",
+    "gwascatalog://reference/countries",
     name="countries",
     title="GWAS Catalog Countries of Recruitment",
     description=(
@@ -181,10 +281,30 @@ def gwascatalog_countries() -> dict:
     return read_countries()
 
 
+@mcp.resource(
+    "gwascatalog://reference/openapi-schema",
+    name="openapi_schema",
+    title="GWAS Catalog REST API v2 OpenAPI Schema",
+    description=(
+        "Full OpenAPI specification for the GWAS Catalog REST API v2, in YAML format. "
+        "Use this only if you need to understand endpoint structure, "
+        "request parameters, or response shapes beyond what the MCP tools expose. "
+        "Updated daily; cached for 24 hours."
+    ),
+    mime_type="text/yaml",
+)
+async def gwascatalog_openapi_schema() -> str:
+    record_resource_access("openapi_schema")
+    return await fetch_schema()
+
+
 # ---- Traits tool ----
 
 TRAIT_TOOL_DESCRPTION = """
 Search and browse Experimental Factor Ontology (EFO) terms in the GWAS Catalog.
+
+For an overview of available tools, workflows, and reference resources see:
+gwascatalog://docs/index
 
 This tool can be helpful to explore the traits present in the GWAS Catalog. If
 the trait is present in the GWAS Catalog, there will be studies
@@ -266,6 +386,9 @@ async def gwascatalog_get_traits(
 STUDY_TOOL_DESCRIPTION = f"""
 Find GWAS Catalog studies by trait, ancestry, gene, or accession.
 
+For an overview of available tools, workflows, and reference resources see:
+gwascatalog://docs/index
+
 Trait search guidance:
 
 {TRAIT_SEARCH_GUIDANCE}
@@ -341,6 +464,9 @@ async def gwascatalog_get_studies(
 
 ASSOCATION_TOOL_DESCRIPTION = f"""
 Find variant-trait associations with statistical details from the GWAS Catalog.
+
+For an overview of available tools, workflows, and reference resources see:
+gwascatalog://docs/index
 
 Result sorting guidance:
 
