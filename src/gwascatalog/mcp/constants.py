@@ -14,8 +14,6 @@ to traits or diseases, GWAS study results, or the populations in which
 associations were discovered.
 """
 
-GWASCATALOG_API_RATE_LIMIT = 15.0  # requests per second
-
 TRAIT_SEARCH_GUIDANCE = (
     "If you prefer to first identify a wider range of relevant traits, start "
     "with the `gwascatalog_get_traits` tool using free-text search with the efo_trait "
