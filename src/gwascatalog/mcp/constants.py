@@ -25,4 +25,11 @@ TRAIT_SEARCH_GUIDANCE = (
     "For precision, prefer EFO IDs (e.g. MONDO_0004979) over names."
 )
 
+COHORT_SEARCH_GUIDANCE = """
+Cohorts are recorded with a controlled vocabulary (Cohort ID). Users may provide
+cohort names in the query (Cohort Name). When setting the cohort parameter always
+use map cohort names to a cohort ID by looking at the controlled vocabulary resource:
+
+gwascatalog://reference/cohorts
+"""
 HTTP_PROXY = os.getenv("GWASCATALOG_HTTP_PROXY", None)

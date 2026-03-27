@@ -23,6 +23,7 @@ import httpx
 from gwascatalog.mcp.client import GwasCatalogClient
 from gwascatalog.mcp.config import Settings
 from gwascatalog.mcp.constants import (
+    COHORT_SEARCH_GUIDANCE,
     GWASCATALOG_MCP_INSTRUCTIONS,
     TRAIT_SEARCH_GUIDANCE,
 )
@@ -397,6 +398,10 @@ gwascatalog://docs/index
 Trait search guidance:
 
 {TRAIT_SEARCH_GUIDANCE}
+
+Cohort search guidance:
+
+{COHORT_SEARCH_GUIDANCE}
 """
 
 
@@ -410,7 +415,7 @@ async def gwascatalog_get_studies(
     mapped_gene: MappedGene | None = None,
     pubmed_id: PubmedId | None = None,
     ancestral_group: AncestralGroup | None = None,
-    cohort: Cohort | None = None,
+    cohort_id: Cohort | None = None,
     full_pvalue_set: FullPValueSet | None = None,
     gxe: GxE | None = None,
     show_child_trait: ShowChildTrait | None = None,
@@ -427,7 +432,7 @@ async def gwascatalog_get_studies(
         mapped_gene=mapped_gene,
         pubmed_id=pubmed_id,
         ancestral_group=ancestral_group,
-        cohort=cohort,
+        cohort=cohort_id,
         full_pvalue_set=full_pvalue_set,
         gxe=gxe,
         show_child_trait=show_child_trait,
