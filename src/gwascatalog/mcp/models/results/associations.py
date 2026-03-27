@@ -45,12 +45,19 @@ RiskFrequencyField = Annotated[
         examples=["0.523756034"],
     ),
 ]
+
+# p values
 PValueDescriptionField = Annotated[
     _NRStr,
+    BeforeValidator(_none_if_placeholder),
     Field(
         description="Information describing context of p-value",
         examples=["females", "smokers"],
     ),
+]
+
+PValueField = Annotated[
+    float, Field(description="Reported p-value for the association")
 ]
 PValueMantissaField = Annotated[
     int, Field(description="Reported p-value for strongest SNP risk allele (Mantissa)")
@@ -58,28 +65,41 @@ PValueMantissaField = Annotated[
 PValueExponentField = Annotated[
     int, Field(description="Reported p-value for strongest SNP risk allele (Exponent)")
 ]
-MultiSNPHaplotypeField = Annotated[
-    bool, Field(description="Whether the association is for a multi-SNP haplotype")
+
+# effect sizes
+
+OrValue = Annotated[
+    str,
+    BeforeValidator(_none_if_placeholder),
+    Field(description="Odds ratio string format", examples=["0.78137505"]),
 ]
-SNPInteractionField = Annotated[
-    bool, Field(description="Whether the association is for a SNP-SNP interaction")
+
+BetaField = Annotated[
+    str,
+    BeforeValidator(_none_if_placeholder),
+    Field(description="A concatenated text containing beta number, direction and unit"),
 ]
 RangeField = Annotated[
-    str, Field(description="95% confidence interval", examples=["12.41-19.61"])
+    str,
+    BeforeValidator(_none_if_placeholder),
+    Field(description="95% confidence interval", examples=["12.41-19.61"]),
 ]
 DescriptionField = Annotated[
     str,
+    BeforeValidator(_none_if_placeholder),
     Field(
         description="Additional comment relating to beta or OR value",
         examples=["Discovery"],
     ),
 ]
-OrValue = Annotated[
-    str, Field(description="Odds ratio string format", examples=["0.78137505"])
+
+
+# other fields
+MultiSNPHaplotypeField = Annotated[
+    bool, Field(description="Whether the association is for a multi-SNP haplotype")
 ]
-BetaField = Annotated[
-    str,
-    Field(description="A concatenated text containing beta number, direction and unit"),
+SNPInteractionField = Annotated[
+    bool, Field(description="Whether the association is for a SNP-SNP interaction")
 ]
 LastMappingDateField = Annotated[
     datetime, Field(description="Last time this association was mapped to Ensembl")
@@ -87,9 +107,7 @@ LastMappingDateField = Annotated[
 LastUpdatedField = Annotated[
     datetime, Field(description="Last time this association was updated")
 ]
-PValueField = Annotated[
-    float, Field(description="Reported p-value for the association")
-]
+
 EfoTraitsField = Annotated[
     list[TraitResult],
     Field(description="Experimental Factor Ontology trait for this association"),
