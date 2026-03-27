@@ -88,6 +88,7 @@ mcp = FastMCP(
     host=settings.host,
     port=settings.port,
     streamable_http_path=settings.streamable_http_path,
+    stateless_http=True,
     lifespan=lifespan,
 )
 
