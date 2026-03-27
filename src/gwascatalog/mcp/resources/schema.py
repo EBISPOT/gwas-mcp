@@ -1,60 +1,43 @@
-"""Cached GWAS Catalog OpenAPI schema resource fetched daily."""
+"""GWAS Catalog OpenAPI schema resource."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
-import time
+from importlib import resources as importlib_resources
 
 import httpx
 
-from gwascatalog.mcp.constants import HTTP_PROXY
+from gwascatalog.mcp.constants import HTTP_PROXY, HTTP_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
 _SCHEMA_URL = "https://www.ebi.ac.uk/gwas/rest/api/v2/rest-api-doc.yaml"
-_CACHE_TTL_SECONDS = 86_400  # 24 hours
 
-_cache_lock = asyncio.Lock()
-_cached_data: str | None = None
-_cached_at: float = 0.0
+
+def _read_bundled_schema() -> str:
+    return (
+        importlib_resources.files("gwascatalog.mcp.data")
+        .joinpath("rest-api-doc.yaml")
+        .read_text("utf-8")
+    )
 
 
 async def fetch_schema() -> str:
-    """Return the GWAS Catalog REST API v2 OpenAPI schema as YAML.
+    """Return the GWAS Catalog REST API v2 OpenAPI schema as YAML."""
+    if HTTP_PROXY is None:
+        logger.info("No proxy is set")
+    else:
+        logger.info(f"{HTTP_PROXY=}")
 
-    The result is refreshed from the upstream URL once per day.
-    """
-    global _cached_data, _cached_at  # noqa: PLW0603
-
-    now = time.monotonic()
-    if _cached_data is not None and (now - _cached_at) < _CACHE_TTL_SECONDS:
-        return _cached_data
-
-    async with _cache_lock:
-        # Re-check after acquiring lock (another coroutine may have refreshed).
-        now = time.monotonic()
-        if _cached_data is not None and (now - _cached_at) < _CACHE_TTL_SECONDS:
-            return _cached_data
-
-        if HTTP_PROXY is None:
-            logger.info("No proxy is set")
-        else:
-            logger.info(f"{HTTP_PROXY=}")
-
-        try:
-            async with httpx.AsyncClient(proxy=HTTP_PROXY) as client:
-                response = await client.get(
-                    _SCHEMA_URL, timeout=10, follow_redirects=True
-                )
-                response.raise_for_status()
-                _cached_data = response.text
-                _cached_at = time.monotonic()
-        except Exception:
-            logger.exception(
-                f"Failed to fetch schema from {_SCHEMA_URL}; using cached data"
+    try:
+        async with httpx.AsyncClient(proxy=HTTP_PROXY) as client:
+            response = await client.get(
+                _SCHEMA_URL, timeout=HTTP_TIMEOUT, follow_redirects=True
             )
-            if _cached_data is None:
-                raise
-
-    return _cached_data  # type: ignore[return-value]
+            response.raise_for_status()
+            return response.text
+    except Exception:
+        logger.exception(
+            f"Failed to fetch schema from {_SCHEMA_URL}; using bundled data"
+        )
+        return _read_bundled_schema()

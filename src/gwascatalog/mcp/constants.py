@@ -33,3 +33,4 @@ use map cohort names to a cohort ID by looking at the controlled vocabulary reso
 gwascatalog://reference/cohorts
 """
 HTTP_PROXY = os.getenv("GWASCATALOG_HTTP_PROXY", None)
+HTTP_TIMEOUT = 10

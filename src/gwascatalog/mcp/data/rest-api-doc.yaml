@@ -1,0 +1,2698 @@
+openapi: 3.0.1
+info:
+  title: Gwas Catalog Rest API V2
+  description:  <p><img width="10%" alt="gwas_icon" src="../../v2/GWAS_Catalog_circle_178x178.png"></p>
+                <p>Welcome to the <a rel="noopener noreferrer" target="_blank" href="https://www.ebi.ac.uk/gwas">GWAS Catalog</a> Restful API.</p>
+                <p>The GWAS RESTful API provides programmatic access to the GWAS Catalog, enables integration of the GWAS Catalog data into custom applications and services, allowing external bioinformatics developers to leverage the curated GWAS datasets, and create more extended solutions for the scientific community.</p>
+                <p>GWAS RESTful API V2 has been released with various enhancements & improvements over GWAS RESTful API V1. V1 is deprecated and will be retired no later than May 2026.<p>
+                <p>Note that this API allows access to the literature-curated top associations & metadata (the same data that is available via the <a rel="noopener noreferrer" target="_blank" href="https://www.ebi.ac.uk/gwas">GWAS Catalog Website</a>. A second API enabling access to full genome-side summary statistics is under development.</p>
+  version: "2.0"
+servers:
+- url: https://www.ebi.ac.uk/gwas/rest/api
+  #url: http://localhost:8087/gwas/rest/api
+  description: Generated server url
+tags:
+  - name: metadata
+    description: The metadata resource is used to list general information and metrics about API at every point of API release and new data release
+  - name: studies
+    description: The studies resource is used to list studies in the GWAS Catalog
+  - name: associations
+    description: The association resource is used to list associations in the GWAS Catalog
+  - name: ancestries
+    description: The ancestries resource is used to list ancestries in the GWAS Catalog
+  - name: publications
+    description: The publications is used to list publications in the GWAS Catalog
+  - name: efo-traits
+    description: The efotraits resource is used to list EFO trait ontology annotations in the GWAS Catalog
+  - name: single-nucleotide-polymorphisms
+    description: The single nucleotide polymorphisms resource is used to list SNPs in the GWAS Catalog
+  - name: genomic-contexts
+    description: The genomic contexts resource is used to list genomic contexts in the GWAS Catalog
+  - name: genes
+    description: The genes resource is used to list genes in the GWAS Catalog
+  - name: loci
+    description: The loci resource is used to list linking of association & risk allleles in the GWAS Catalog
+  - name: body-of-works
+    description: The body of work resource is used to list submissions to the GWAS Catalog that have not yet been published in a journal
+  - name: unpublished-ancestries
+    description: The unpublished ancestries resource is used to list unpublished ancestries from unpublished studies in the GWAS Catalog
+  - name: unpublished-studies
+    description: The unpublished studies resource is used to list studies submitted to the GWAS Catalog that have not yet been published in a journal
+paths:
+  /v2/metadata:
+    get:
+      tags:
+        - metadata
+      operationId: getVersion
+      summary: A GET request to expose metadata that reveals general information and metrics about API at every point of API release and new data release
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/metadata'
+  /v2/unpublished-studies:
+    get:
+      tags:
+      - unpublished-studies
+      operationId: getUnpublishedStudies
+      summary: A GET request will list all of the Catalog unpublished studies
+      parameters:
+      - name: disease_trait
+        in: query
+        description: |-
+          Free text description of the trait investigated in this study
+
+          <i>Example</i> : Early-onset Parkinson's disease
+        required: false
+        schema:
+          type: string
+      - name: accession_id
+        in: query
+        description: |-
+          The study’s GWAS Catalog accession ID
+
+          <i>Example</i> : GCST90623790
+        required: false
+        schema:
+          type: string
+      - name: title
+        in: query
+        description: |-
+          Title of manuscript the GWAS is included in
+
+          <i>Example</i> : Genome-wide association study
+        required: false
+        schema:
+          type: string
+      - name: first_author
+        in: query
+        description: |-
+          Last name and initials of first author
+
+          <i>Example</i> : Doe John
+        required: false
+        schema:
+          type: string
+      - name: cohort
+        in: query
+        description: |-
+          Discovery stage cohorts used in this study
+
+          <i>Example</i> : BioImage
+        required: false
+        schema:
+          type: string
+      - name: sort
+        in: query
+        description: Fields to sort by
+        required: false
+        schema:
+          type: string
+          enum:
+            - study_accession
+            - variant_count
+      - name: direction
+        in: query
+        description: "Sort direction : asc or desc"
+        required: false
+        schema:
+          type: string
+          enum:
+            - asc
+            - desc
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 20
+      responses:
+        "500":
+            description: Internal Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/page-unpublished-studies'
+  /v2/unpublished-studies/{accession_id}:
+    get:
+      tags:
+      - unpublished-studies
+      operationId: getUnpublishedStudy
+      summary: A GET request to retreive an unpublished study
+      parameters:
+      - name: accession_id
+        in: path
+        description: "The study’s GWAS Catalog accession ID <br/> <br/><i> Example\
+          \ </i> : GCST90623790"
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/page-unpublished-studies'
+  /v2/unpublished-studies/{accession_id}/unpublished-ancestries:
+    get:
+      tags:
+      - unpublished-ancestries
+      operationId: getUnpublishedAncestries
+      summary: A GET request to retrieve ancestries for an unpublished study
+      parameters:
+      - name: accession_id
+        in: path
+        description: "The study’s GWAS Catalog accession ID <br/> <br/><i> Example\
+          \ </i> : GCST90623790"
+        required: true
+        schema:
+          type: string
+      - name: sort
+        in: query
+        description: Fields to sort by
+        required: false
+        schema:
+          type: string
+          enum:
+            - sample_size
+            - cases
+            - controls
+      - name: direction
+        in: query
+        description: "Sort direction : asc or desc"
+        required: false
+        schema:
+          type: string
+          enum:
+            - asc
+            - desc
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/collection-unpublished-ancestries'
+  /v2/unpublished-studies/{accession_id}/unpublished-ancestries/{ancestry_id}:
+    get:
+      tags:
+      - unpublished-ancestries
+      operationId: getUnpublishedAncestry
+      summary: A GET request to retrieve a single ancestry for an unpublished study
+      parameters:
+      - name: accession_id
+        in: path
+        description: "The study’s GWAS Catalog accession ID <br/> <br/><i> Example\
+          \ </i> : GCST90623790"
+        required: true
+        schema:
+          type: string
+      - name: ancestry_id
+        in: path
+        description: "primary identifier of Ancestry table <br/> <br/><i> Example\
+          \ </i> : 169062056"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/unpublished-ancestries'
+  /v2/studies:
+    get:
+      tags:
+      - studies
+      operationId: getStudies
+      summary: A GET request to retrieve all studies in Catalog
+      parameters:
+      - name: pubmed_id
+        in: query
+        description: |-
+          pubmedId of the publication
+
+          <i>Example</i> : 35241825
+        required: false
+        schema:
+          type: string
+      - name: disease_trait
+        in: query
+        description: |-
+          Free text description of the trait investigated in this study
+
+          <i>Example</i> : Early-onset Parkinson's disease
+        required: false
+        schema:
+          type: string
+      - name: full_pvalue_set
+        in: query
+        description: |-
+          Whether full summary statistics are available for this study
+
+          <i>Example</i> : true/false
+        required: false
+        schema:
+          type: boolean
+      - name: efo_id
+        in: query
+        description: |-
+          The trait URI shortform
+
+          <i>Example</i> : EFO_0001060
+        required: false
+        schema:
+          type: string
+      - name: efo_trait
+        in: query
+        description: |-
+          The trait name or label
+
+          <i>Example</i> : celiac disease
+        required: false
+        schema:
+          type: string
+      - name: accession_id
+        in: query
+        description: |-
+          The study’s GWAS Catalog accession ID
+
+          <i>Example</i> : GCST000854
+        required: false
+        schema:
+          type: string
+      - name: cohort
+        in: query
+        description: |-
+          Discovery stage cohorts used in this study
+
+          <i>Example</i> : BioImage
+        required: false
+        schema:
+          type: string
+      - name: gxe
+        in: query
+        description: "Whether the study investigates a gene-environment interaction\n\
+          \n<i>Example</i> : true/false "
+        required: false
+        schema:
+          type: boolean
+      - name: ancestral_group
+        in: query
+        description: |-
+          Ancestry category group label, assigned to reduce complexity within the data sets and place samples in context
+
+          <i>Example</i> : European
+        required: false
+        schema:
+          type: string
+      - name: no_of_individuals
+        in: query
+        description: |2-
+           Number of individuals in this sample
+
+          <i>Example</i> : 4390
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: show_child_trait
+        in: query
+        description: |-
+          display entities for descendants of a parent Efo Trait Term
+
+          <i>Example</i> : true/false
+        required: false
+        schema:
+          type: boolean
+      - name: mapped_gene
+        in: query
+        description: |-
+          Gene(s) overlapping the variant. If a variant is intergenic, the closest 5' and 3' genes are listed
+
+          <i>Example</i> : CCR6,HBS1L
+        required: false
+        schema:
+          type: string
+      - name: extended_geneset
+        in: query
+        description: |-
+          Show extended matching genes in addition to the mapped genes
+
+          <i>Example</i> : true/false
+        required: false
+        schema:
+          type: boolean
+      - name: sort
+        in: query
+        description: Fields to sort by
+        required: false
+        schema:
+          type: string
+          enum:
+            - accession_Id
+            - snp_count
+      - name: direction
+        in: query
+        description: "Sort direction : asc or desc"
+        required: false
+        schema:
+          type: string
+          enum:
+            - asc
+            - desc
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 20
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/page-studies'
+  /v2/studies/{accession_id}:
+    get:
+      tags:
+      - studies
+      operationId: getStudyByAccession
+      summary: A GET request to retrieve a study in Catalog
+      parameters:
+      - name: accession_id
+        in: path
+        description: "The study’s GWAS Catalog accession ID <br/> <br/><i> Example\
+          \ </i> : GCST000854"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/studies'
+  /v2/studies/{accession_id}/ancestries:
+    get:
+      tags:
+      - ancestries
+      operationId: getAncestries
+      summary: A GET request to retrieve all ancestries for a study in Catalog
+      parameters:
+      - name: accession_id
+        in: path
+        description: "The study’s GWAS Catalog accession ID <br/> <br/><i> Example\
+          \ </i> : GCST000854"
+        required: true
+        schema:
+          type: string
+      - name: sort
+        in: query
+        description: Fields to sort by
+        required: false
+        schema:
+          type: string
+          enum:
+            - number_of_individuals
+      - name: direction
+        in: query
+        description: "Sort direction : asc or desc"
+        required: false
+        schema:
+          type: string
+          enum:
+            - asc
+            - desc
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/collection-ancestries'
+  /v2/studies/{accession_id}/ancestries/{ancestry_id}:
+    get:
+      tags:
+      - ancestries
+      operationId: getAncestry
+      summary: A GET request to retrieve a single ancestry for a study in Catalog
+      parameters:
+      - name: accession_id
+        in: path
+        description: "The study’s GWAS Catalog accession ID <br/> <br/><i> Example\
+          \ </i> : GCST000854"
+        required: true
+        schema:
+          type: string
+      - name: ancestry_id
+        in: path
+        description: "primary identifier of ancestry table <br/> <br/><i> Example\
+          \ </i> : 7529"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ancestries'
+  /v2/single-nucleotide-polymorphisms:
+    get:
+      tags:
+      - single-nucleotide-polymorphisms
+      operationId: getSnps
+      summary: A GET request to retrieve all snps in Catalog
+      parameters:
+      - name: rs_id
+        in: query
+        description: "SNP rsId; if a haplotype it may include more than one rs\
+          \ number (multiple SNPs comprising the haplotype)\n\n<i>Example</i> : rs3093017 "
+        required: false
+        schema:
+          type: string
+      - name: bp_location
+        in: query
+        description: |-
+          search for SNPs via their base pair location
+
+          <i>Example</i> : 95000000
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: bp_start
+        in: query
+        description: |-
+          Search for SNPs on a certain chromosome and within a given base pair location range
+
+          <i>Example</i> : 95000000 (To be used in combination with bp_start,bp_end & chromosome)
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: bp_end
+        in: query
+        description: |-
+          Search for SNPs on a certain chromosome and within a given base pair location range
+
+          <i>Example</i> : 95000000 (To be used in combination with bp_start,bp_end & chromosome)
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: pubmed_id
+        in: query
+        description: |-
+          pubmedId of the publication
+
+          <i>Example</i> : 35241825
+        required: false
+        schema:
+          type: string
+      - name: chromosome
+        in: query
+        description: |-
+          Search for SNPs on a certain chromosome
+
+          <i>Example</i> : 13 (To be used in combination with bp_start,bp_end & chromosome)
+        required: false
+        schema:
+          type: string
+      - name: mapped_gene
+        in: query
+        description: |-
+          Gene(s) overlapping the variant. If a variant is intergenic, the closest 5' and 3' genes are listed
+
+          <i>Example</i> : CCR6,HBS1L
+        required: false
+        schema:
+          type: string
+      - name: extended_geneset
+        in: query
+        description: |-
+          Show extended matching genes in addition to the mapped genes
+
+          <i>Example</i> : true/false
+        required: false
+        schema:
+          type: boolean
+      - name: sort
+        in: query
+        description: Fields to sort by
+        required: false
+        schema:
+          type: string
+          enum:
+            - location
+            - rs_id
+      - name: direction
+        in: query
+        description: "Sort direction : asc or desc"
+        required: false
+        schema:
+          type: string
+          enum:
+            - asc
+            - desc
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 20
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/page-single-nucleotide-polymorphisms'
+  /v2/single-nucleotide-polymorphisms/{rs_id}:
+    get:
+      tags:
+      - single-nucleotide-polymorphisms
+      operationId: getSingleNucleotidePolymorphism
+      summary: A GET request to retrieve single snp
+      parameters:
+      - name: rs_id
+        in: path
+        description: "Strongest SNP; if a haplotype it may include more than one rs\
+          \ number (multiple SNPs comprising the haplotype) <br/> <br/><i> Example\
+          \ </i> : rs3093017 "
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/single-nucleotide-polymorphisms'
+  /v2/single-nucleotide-polymorphisms/{rs_id}/genomic-contexts:
+    get:
+      tags:
+      - genomic-contexts
+      operationId: getGenomicContexts
+      summary: A GET request to retrieve all genomic contexts for a snp
+      parameters:
+      - name: rs_id
+        in: path
+        description: "SNP rsID; if a haplotype it may include more than one rs\
+          \ number (multiple SNPs comprising the haplotype) <br/> <br/><i> Example\
+          \ </i> : rs3093017 "
+        required: true
+        schema:
+          type: string
+      - name: sort
+        in: query
+        description: Fields to sort by
+        required: false
+        schema:
+          type: string
+          enum:
+            - distance
+      - name: direction
+        in: query
+        description: "Sort direction : asc or desc"
+        required: false
+        schema:
+          type: string
+          enum:
+            - asc
+            - desc
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/collection-genomic-contexts'
+  /v2/single-nucleotide-polymorphisms/{rs_id}/genomic-contexts/{genomicContext_id}:
+    get:
+      tags:
+      - genomic-contexts
+      operationId: getGenomicContext
+      summary: A GET request to retrieve single genomic context for a snp
+      parameters:
+      - name: rs_id
+        in: path
+        description: "SNP rsID; if a haplotype it may include more than one rs\
+          \ number (multiple SNPs comprising the haplotype) <br/> <br/><i> Example\
+          \ </i> : rs3093017 "
+        required: true
+        schema:
+          type: string
+      - name: genomicContext_id
+        in: path
+        description: "primary identifier of genomicContext table <br/> <br/><i> Example\
+          \ </i> : 182748715"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/genomic-contexts'
+  /v2/publications:
+    get:
+      tags:
+      - publications
+      operationId: getPublications
+      summary: A GET request to retrieve all publications in Catalog
+      parameters:
+      - name: pubmed_id
+        in: query
+        description: "pubmedId of the publication <br/> <br/><i> Example </i> : 35241825"
+        required: false
+        schema:
+          type: string
+      - name: title
+        in: query
+        description: "Title of manuscript the GWAS is included in <br/> <br/><i> Example\
+          \ </i> : Genome-wide association study"
+        required: false
+        schema:
+          type: string
+      - name: first_author
+        in: query
+        description: "Last name and initials of first author <br/> <br/><i> Example\
+          \ </i> : Doe John"
+        required: false
+        schema:
+          type: string
+      - name: sort
+        in: query
+        description: Fields to sort by
+        required: false
+        schema:
+          type: string
+          enum:
+            - pubmed_id
+            - publication_date
+      - name: direction
+        in: query
+        description: "Sort direction : asc or desc"
+        required: false
+        schema:
+          type: string
+          enum:
+            - asc
+            - desc
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 20
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/page-publications'
+  /v2/publications/{pubmed_id}:
+    get:
+      tags:
+      - publications
+      operationId: getPublication
+      summary: A GET request to retrieve single publication in Catalog
+      parameters:
+      - name: pubmed_id
+        in: path
+        description: "pubmedId of the publication <br/> <br/><i> Example </i> : 35241825"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/publications'
+  /v2/genes:
+    get:
+      tags:
+      - genes
+      operationId: getGenes
+      summary: A GET request to retrieve all genes in Catalog
+      parameters:
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 20
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          default:
+            - "id,DESC"
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/page-genes'
+  /v2/genes/{gene_name}:
+    get:
+      tags:
+      - genes
+      operationId: getGeneByName
+      summary: A GET request to retrieve a single gene
+      parameters:
+      - name: gene_name
+        in: path
+        description: "Gene Name  <br/> <br/><i> Example </i> : HBS1L"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/genes'
+  /v2/efo-traits:
+    get:
+      tags:
+      - efo-traits
+      operationId: getEFOTraits
+      summary: A GET request to retrieve all efotraits in Catalog
+      parameters:
+      - name: efo_trait
+        in: query
+        description: |-
+          The trait name or label
+
+          <i>Example</i> : celiac disease
+        required: false
+        schema:
+          type: string
+      - name: uri
+        in: query
+        description: |-
+          The trait URI or unique identifier
+
+          <i>Example</i> : http://www.ebi.ac.uk/efo/EFO_0001060
+        required: false
+        schema:
+          type: string
+      - name: efo_id
+        in: query
+        description: |-
+          The trait URI shortform
+
+          <i>Example</i> : EFO_0001060
+        required: false
+        schema:
+          type: string
+      - name: pubmed_id
+        in: query
+        description: |-
+          pubmedId of the publication
+
+          <i>Example</i> : 35241825
+        required: false
+        schema:
+          type: string
+      - name: mapped_gene
+        in: query
+        description: |-
+          Gene(s) overlapping the variant. If a variant is intergenic, the closest 5' and 3' genes are listed
+
+          <i>Example</i> : CCR6,HBS1L
+        required: false
+        schema:
+          type: string
+      - name: extended_geneset
+        in: query
+        description: |-
+          Show extended matching genes in addition to the mapped genes
+
+          <i>Example</i> : true/false
+        required: false
+        schema:
+          type: boolean
+      - name: sort
+        in: query
+        description: Fields to sort by
+        required: false
+        schema:
+          type: string
+          enum:
+            - efo_id
+            - efo_trait
+      - name: direction
+        in: query
+        description: "Sort direction : asc or desc"
+        required: false
+        schema:
+          type: string
+          enum:
+            - asc
+            - desc
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned (maximum 500)
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 20
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/page-trait-mappings'
+  /v2/efo-traits/{efo_id}:
+    get:
+      tags:
+      - efo-traits
+      operationId: getEFOTraitsDTO
+      summary: A GET request to retrieve a single efotrait
+      parameters:
+      - name: efo_id
+        in: path
+        description: "short form for Efo Traits table <br/> <br/><i> Example\
+          \ </i> : EFO_0009713"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/trait-mappings'
+  /v2/body-of-works:
+    get:
+      tags:
+      - body-of-works
+      operationId: getBodiesOfWork
+      summary: A GET request to retrieve all body of works in Catalog
+      parameters:
+      - name: title
+        in: query
+        description: "Title of manuscript the GWAS is included in <br/> <br/><i> Example\
+          \ </i> : Genome-wide association study"
+        required: false
+        schema:
+          type: string
+      - name: first_author
+        in: query
+        description: "Last name and initials of first author <br/> <br/><i> Example\
+          \ </i> : Doe John"
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 20
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          default:
+          - "id,DESC"
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/page-body-of-works'
+  /v2/body-of-works/{bow_id}:
+    get:
+      tags:
+      - body-of-works
+      operationId: getBodyOfWork
+      summary: A GET request to retrieve a single body of work
+      parameters:
+      - name: bow_id
+        in: path
+        description: "primary identifier of Body of work table <br/> <br/><i> Example\
+          \ </i> : 169062064"
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/body-of-works'
+  /v2/body-of-works/{bow_id}/unpublished-studies:
+    get:
+      tags:
+      - body-of-works
+      operationId: getUnpublishedStudies_1
+      summary: A GET request to retrieve all unpublished studies for a body of work in Catalog
+      parameters:
+      - name: bow_id
+        in: path
+        description: "primary identifier of Body of work table <br/> <br/><i> Example\
+          \ </i> : 169062064"
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 20
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          default:
+            - "id,DESC"
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/page-unpublished-studies'
+  /v2/associations:
+    get:
+      tags:
+      - associations
+      summary: A GET request will list all of the Catalog associations
+      operationId: getAssociations
+      parameters:
+      - name: pubmed_id
+        in: query
+        description: |-
+          pubmedId of the publication
+
+          <i>Example</i> : 35241825
+        required: false
+        schema:
+          type: string
+      - name: rs_id
+        in: query
+        description: "SNP rsID; if a haplotype it may include more than one rs\
+          \ number (multiple SNPs comprising the haplotype)\n\n<i>Example</i> : rs3093017 "
+        required: false
+        schema:
+          type: string
+      - name: full_pvalue_set
+        in: query
+        description: |-
+          Whether full summary statistics are available for this study
+
+          <i>Example</i> : true/false
+        required: false
+        schema:
+          type: boolean
+      - name: accession_id
+        in: query
+        description: |-
+          The study’s GWAS Catalog accession ID
+
+          <i>Example</i> : GCST000854
+        required: false
+        schema:
+          type: string
+      - name: efo_trait
+        in: query
+        description: |-
+          The trait name or label
+
+          <i>Example</i> : celiac disease
+        required: false
+        schema:
+          type: string
+      - name: efo_id
+        in: query
+        description: |-
+          The trait URI shortform
+
+          <i>Example</i> : EFO_0001060
+        required: false
+        schema:
+          type: string
+      - name: show_child_trait
+        in: query
+        description: |-
+          display entities for descendants of a parent Efo Trait Term
+
+          <i>Example</i> : true/false
+        required: false
+        schema:
+          type: boolean
+      - name: mapped_gene
+        in: query
+        description: |-
+          Gene(s) overlapping the variant. If a variant is intergenic, the closest 5' and 3' genes are listed
+
+          <i>Example</i> : CCR6,HBS1L
+        required: false
+        schema:
+          type: string
+      - name: extended_geneset
+        in: query
+        description: |-
+          Show extended matching genes in addition to the mapped genes
+
+          <i>Example</i> : true/false
+        required: false
+        schema:
+          type: boolean
+      - name: sort
+        in: query
+        description: Fields to sort by
+        required: false
+        schema:
+          type: string
+          enum:
+            - p_value
+            - risk_frequency
+            - or_value
+            - beta_num
+      - name: direction
+        in: query
+        description: "Sort direction : asc or desc"
+        required: false
+        schema:
+          type: string
+          enum:
+            - asc
+            - desc
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 20
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/page-associations'
+  /v2/associations/{association_id}:
+    get:
+      tags:
+      - associations
+      operationId: getAssociation
+      summary: A GET request to retrieve single association
+      parameters:
+      - name: association_id
+        in: path
+        description: "primary identifier of association table <br/> <br/><i> Example\
+          \ </i> : 169106883"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/associations'
+  /v2/associations/{association_id}/loci:
+    get:
+      tags:
+      - loci
+      operationId: getLoci
+      summary: A GET request to retrieve all loci for an association in Catalog
+      parameters:
+      - name: association_id
+        in: path
+        description: "primary identifier of Association table <br/> <br/><i> Example\
+          \ </i> : 169106883"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/collection-loci'
+  /v2/associations/{association_id}/loci/{locus_id}:
+    get:
+      tags:
+      - loci
+      operationId: getLocus
+      summary: A GET request to retrieve a single locus for an association
+      parameters:
+      - name: association_id
+        in: path
+        description: "primary identifier of Association table <br/> <br/><i> Example\
+          \ </i> : 169106883"
+        required: true
+        schema:
+          type: string
+      - name: locus_id
+        in: path
+        description: "primary identifier of Locus table <br/> <br/><i> Example </i>\
+          \ : 169106882"
+        required: true
+        schema:
+          type: string
+      responses:
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "404":
+          description: Entity Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/loci'
+components:
+  schemas:
+    metadata:
+      type: object
+      properties:
+        title:
+          type: string
+          description: API title
+          example: GWAS Catalog Rest API 2.0
+        version:
+          type: string
+          description: API version
+          example: 2.0
+        data_release_date:
+          type: string
+          description: Latest Gwas Catalog Data Release date
+          example: 2025-07-21
+        api_release_date:
+          type: string
+          description: Latest Gwas Catalog API Release date
+          example: 2025-08-01
+        dbsnp_build:
+          type: string
+          description: Latest DBsnp Build version
+          example: 156
+        gene_build:
+          type: string
+          description: Latest Gene Build version
+          example: GRCh38.p14
+        efo_version:
+          type: string
+          description: Latest Efo Build version
+          example: v3.80.0
+        ensembl_version:
+          type: string
+          description: Latest Ensembl Build version
+          example: 114
+        terms_of_service:
+          type: string
+          description: API Terms of Use
+          example: https://www.ebi.ac.uk/about/terms-of-use/
+        commit_hash:
+          type: string
+          description: Latest Build commit Id
+          example: 0b8cf34
+        license:
+          $ref: '#/components/schemas/license'
+        contact:
+          $ref: '#/components/schemas/contact'
+        api_reference:
+          type: string
+          description: API reference url
+          example: https://www.ebi.ac.uk/gwas/rest/api/v2/reference
+        api_documentation:
+          type: string
+          description: API documentation url
+          example: https://www.ebi.ac.uk/gwas/rest/api/v2/docs
+
+    contact:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Contact details for Gwas Support
+          example: GWAS Helpdesk
+        email:
+          type: string
+          description: Contact email for Gwas Support
+          example: gwas-info@ebi.ac.uk
+        url:
+          type: string
+          description: Contact url for Gwas Support
+          example: mailto:gwas-info@ebi.ac.uk
+
+    license:
+      type: object
+      properties:
+        name:
+          type: string
+          description: API License details
+          example: Apache License 2.0
+        url:
+          type: string
+          description: Github repository details for Rest Api
+          example: Apache License 2.0
+
+    link:
+      type: object
+      properties:
+        rel:
+          type: string
+        href:
+          type: string
+        hreflang:
+          type: string
+        media:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        name:
+          type: string
+    page:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+        total_elements:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+        number:
+          type: integer
+          format: int64
+
+    errors:
+      type: object
+      properties:
+        error_code:
+          type: integer
+          format: int32
+          description: Error code
+          example: "ORA-500001"
+        error:
+          type: string
+          description: Error header
+          example: "SQL Exception"
+        error_message:
+          type: string
+          description: Error description
+        service_path:
+          type: string
+          description: Endpoint details
+          example: "/studies"
+        timestamp:
+          type: string
+          description: Error timestamp
+          example: 2021-10-19T22:22:55.015+0000
+        report:
+          type: object
+          properties:
+            additional_properties:
+              type: string
+              description: Addition attributes for the error
+
+    allele:
+      type: object
+      properties:
+        rs_id:
+          type: string
+          description: The SNP’s rs Id
+          example: rs3093017
+        effect_allele:
+          type: string
+          description: risk allele label
+          example: C
+
+    ancestries:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Stage of the experimental design
+          example: initial|replication
+        number_of_individuals:
+          type: integer
+          format: int32
+          description: Number of individuals in this group
+          example: 10000
+        ancestral_groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ancestry-groups'
+          description: Ancestry category group label
+          example: European
+        country_of_origin:
+          type: array
+          items:
+            $ref: '#/components/schemas/countries'
+          description: Country of origin of the individuals in the sample
+          example: China
+        country_of_recruitment:
+          type: array
+          items:
+            $ref: '#/components/schemas/countries'
+          description: List of country/countries where samples were recruited
+          example: Japan
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+
+
+    ancestry-groups:
+      type: object
+      properties:
+        ancestral_group:
+          type: string
+          description: Ancestry category group label
+          example: European
+
+    associations:
+      type: object
+      properties:
+        association_id:
+          type: integer
+          format: int64
+          description: primary id of Association table
+        risk_frequency:
+          type: string
+          description: Reported risk/effect allele frequency associated with strongest SNP in controls
+          example: 0.523756034
+        pvalue_description:
+          type: string
+          description: Information describing context of p-value
+          example:  females, smokers
+        pvalue_mantissa:
+          type: integer
+          format: int32
+          description: Reported p-value for strongest SNP risk allele (Mantissa)
+          example: 3
+        pvalue_exponent:
+          type: integer
+          format: int32
+          description: Reported p-value for strongest SNP risk allele (Exponent)
+          example: -18
+        multi_snp_haplotype:
+          type: boolean
+          description: Whether the association is for a multi-SNP haplotype
+          example: true|false
+        snp_interaction:
+          type: boolean
+          description: Whether the association is for a SNP-SNP interaction
+          example: true|false
+        snp_type:
+          type: string
+          description: Whether a SNP has previously been reported
+          example: known
+        range:
+          type: string
+          description: 95% confidence interval
+          example: [12.41-19.61]
+        description:
+          type: string
+          description: Additional comment relating to beta or OR value
+          example: Discovery
+        or_per_copy_num:
+          type: number
+          format: float
+          description: Odds ratio numerical value
+          example: 0.78137505
+        or_value:
+          type: string
+          description: Odds ratio
+          example: null
+        beta_num:
+          type: number
+          format: float
+          description:  Beta coefficient numerical value
+          example: 16.01
+        beta_unit:
+          type: string
+          description: Beta coefficient unit
+          example: mg/ml
+        beta_direction:
+          type: string
+          description: Beta coefficient direction
+          example: decrease
+        beta:
+          type: string
+          description: A concatenated text containing beta number, direction and unit
+          example: null
+        last_mapping_date:
+          type: string
+          format: date-time
+          description: Last time this association was mapped to Ensembl
+          example: 2021-06-24T18:32:58.000+0000
+        last_update_date:
+          type: string
+          format: date-time
+          description: Last time this association was updated
+          example: 2021-06-24T18:32:58.000+0000
+        p_value:
+          type: number
+          format: double
+          description: Reported p-value for the association
+          example: 3.02e-18
+        efo_traits:
+          type: array
+          description: Experimental Factor Ontology trait for this association
+          items:
+            $ref: '#/components/schemas/efo-trait'
+        reported_trait:
+          type: array
+          items:
+            type: string
+            description: trait for this association
+            example: Coronary artery disease
+        accession_id:
+          type: string
+          description: Accession ID linked to the association
+          example: GCST90566353
+        locations:
+          type: array
+          items:
+            type: string
+            description: The SNP’s genomic locations
+            example: 17:9020401
+        mapped_genes:
+          type: array
+          items:
+            type: string
+            description: Gene(s) overlapping the variant. If a variant is intergenic, the closest 5' and 3' genes are listed
+            example: CCR6
+        snp_effect_allele:
+          type: array
+          items:
+            type: string
+            description: SNP(s) and risk allele most strongly associated within the locus
+            example: rs7329174-G
+        snp_allele:
+          type: array
+          description: SNP(s) and risk allele most strongly associated within the locus
+          items:
+            $ref: '#/components/schemas/allele'
+        bg_efo_traits:
+          type: array
+          description: Any background trait(s) shared by all individuals in the GWAS (e.g. in both cases and controls)
+          items:
+            $ref: '#/components/schemas/efo-trait'
+        pubmed_id:
+          type: string
+          description: pubmedId of the publication
+          example: 35241825
+        first_author:
+          type: string
+          description: first author of the publication
+          example: John Doe
+        ci_lower:
+          type: number
+          format: float
+          description:  lower confidence interval
+          example: 0.063
+        ci_upper:
+          type: number
+          format: float
+          description: upper confidence interval
+          example: 0.337
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+
+    authors:
+      type: object
+      properties:
+        full_name:
+          type: string
+          description: full name of author
+          example: John Doe
+        full_name_standard:
+          type: string
+          description: full name of author in ascii standard
+          example: John Doe
+        first_name:
+          type: string
+          description: first name of author
+          example: John
+        last_name:
+          type: string
+          description: last name of author
+          example: Doe
+        initials:
+          type: string
+          description: initials of author
+          example: M
+        affiliation:
+          type: string
+          description: the author's affiliation to institutions
+          example: Cambridge University
+        orcid:
+          type: string
+          description: the orcidId of the author
+          example: 0000-XXXX-XXXX-XXXX
+
+    body-of-works:
+      type: object
+      properties:
+        gcp_id:
+          type: string
+        title:
+          type: string
+          description: Title of manuscript the GWAS is included in
+          example: Genome-wide association study on susceptibility genes associated with yang-deficiency constitution
+        first_author:
+          type: string
+          description: first author of the publication
+          example: John Doe
+        publication_date:
+          type: string
+          format: date-time
+          description:  Publication date (online (epub) date if available)
+          example: 2022-03-03
+        doi:
+          type: string
+          description: doi for preprint
+          example: https://www.medrxiv.org/content/10.1101/2020.06.17.20134015v2
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+
+
+    countries:
+      type: object
+      properties:
+        major_area:
+          type: string
+          description: continent of the country of recruitment
+          example: Europe
+        region:
+          type: string
+          description: continent of the country of recruitment
+          example: North Europe
+        country_name:
+          type: string
+          description : country of recruitment
+          example: U.K.
+
+
+    efo-trait:
+      type: object
+      description: EFO Response structure
+      properties:
+        efo_id:
+          type: string
+          description: shortform of the EFO trait
+          example: MONDO_0005180
+        efo_trait:
+          type: string
+          description: Mapped Experimental Factor Ontology trait
+          example: Parkinson disease
+
+    genes:
+      type: object
+      properties:
+        gene_name:
+          type: string
+          description: Gene name
+          example: CCR6
+        gene_description:
+          type: string
+          description: Gene description as extracted from Ensembl
+          example: C-C motif chemokine receptor 6
+        location:
+          type: string
+          description: Chromosome and base pair location on the reference genome
+          example: 6:167111807-167139141
+        cytogenic_region:
+          type: string
+          description: Cytogenetic band corresponding to the genomic location
+          example: 6q27
+        biotype:
+          type: string
+          description: Biological significance of the gene, manually added by the HAVANA team
+          example: protein_coding
+        ensembl_gene_ids:
+          type: array
+          items:
+            type: string
+            description: Ensembl Gene ID, if rs number within gene; multiple genes denotes overlapping transcripts
+            example: ENSG00000059573
+        entrez_gene_ids:
+          type: array
+          items:
+            type: string
+            description: Entrez Gene ID, if rs number within gene; multiple genes denotes overlapping transcripts
+            example: 5832
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+    genomic-contexts:
+      type: object
+      properties:
+        is_intergenic:
+          type: boolean
+          description: denotes whether SNP is in intergenic region
+          example: true|false
+        is_upstream:
+          type: boolean
+          description: whether gene is upstream or not
+          example: true|false
+        is_downstream:
+          type: boolean
+          description: whether gene is downstream or not
+          example: true|false
+        distance:
+          type: integer
+          format: int64
+          description:  distance in kb for nearest upstream/downstream gene to rs number, if not within gene
+          example: 8805
+        gene:
+          $ref: '#/components/schemas/genes'
+          description: Gene overlapping the variant. If a variant is intergenic, the closest 5' and 3' genes are listed
+        location:
+          $ref: '#/components/schemas/locations'
+          description: Chromosome and base pair location on the reference genome
+        source:
+          type: string
+          description: the source of Snp mapping
+          example: Ensembl
+        mapping_method:
+          type: string
+          description: the method of Snp mapping
+          example: Ensembl_pipeline
+        is_closest_gene:
+          type: boolean
+          description: closest gene to SNP or not
+          example: true|false
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+    locations:
+      type: object
+      properties:
+        chromosome_name:
+          type: string
+          description: Chromosome number associated with rs number
+          example: 13
+        chromosome_position:
+          type: integer
+          format: int32
+          description:  Chromosomal position associated with rs number
+          example: 40983974
+        region:
+          $ref: '#/components/schemas/regions'
+          description: Cytogenetic region associated with rs number
+
+    loci:
+      type: object
+      properties:
+        haplotype_snp_count:
+          type: integer
+          format: int32
+          description: multiple SNPs comprising the haplotype count
+          example: 2
+        description:
+          type: string
+          description: multiple SNPs comprising the haplotype
+          example: rs411045-?, rs12903821-?
+        strongest_risk_alleles:
+          type: array
+          description:  SNP(s) most strongly associated with trait
+          example: rs12903821-?
+          items:
+            $ref: '#/components/schemas/riskalleles'
+        author_reported_genes:
+          type: array
+          description: Gene(s) reported by author
+          example: CCR6
+          items:
+            $ref: '#/components/schemas/genes'
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+
+    publications:
+      type: object
+      properties:
+        pubmed_id:
+          type: string
+          description: pubmedId of the publication
+          example: 35241825
+        publication_date:
+          type: string
+          format: date-time
+          description:  Publication date (online (epub) date if available)
+          example: 2022-03-03
+        journal:
+          type: string
+          description: journal of the publication
+          example: Nat Genet
+        title:
+          type: string
+          description: title of the publication
+          example: Genome-wide analysis provides genetic evidence that ACE2 influences COVID-19 risk and yields risk scores associated with severe disease
+        authors:
+          type: array
+          items:
+            $ref: '#/components/schemas/authors'
+          description: authors of the publication
+          example: John Doe, Jane Doe
+        first_author:
+          $ref: '#/components/schemas/authors'
+          description: first author of the publication
+          example: John Doe
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+
+    regions:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Cytogenetic region associated with rs number
+          example: 2q37.2
+
+    riskalleles:
+      type: object
+      properties:
+        risk_allele_name:
+          type: string
+          description: SNP(s) and risk allele most strongly associated within the locus
+          example: rs411045-?
+        risk_frequency:
+          type: string
+          description: Reported risk/effect allele frequency associated with strongest SNP in controls
+          example: 0.523756034
+        genome_wide:
+          type: boolean
+          description: SNPxSNP interaction assessed genomewide
+          example: true|false
+        limited_list:
+          type: boolean
+          description: SNPxSNP interaction assessed against a limited list of SNPs
+          example: true|false
+        source:
+          type: string
+          description: the source of Snp mapping
+          example: Ensembl
+        mapping_method:
+          type: string
+          description: the method of Snp mapping
+          example: Ensembl_pipeline
+        is_closest_gene:
+          type: boolean
+          description: closest gene to SNP or not
+          example: true|false
+
+    single-nucleotide-polymorphisms:
+      type: object
+      properties:
+        rs_id:
+          type: string
+          description: The SNP’s rs Id
+          example: rs3093017
+        merged:
+          type: integer
+          format: int64
+          description: Whether this SNP has been merged with another SNP in a newer genome build
+          example: 0
+        functional_class:
+          type: string
+          description: The SNP’s functional class
+          example: intron_variant
+        current_snp:
+          type: string
+          description: SNP the present SNP was merged with as part of a more recent genome build
+          example: rs3093017
+        last_update_date:
+          type: string
+          format: date-time
+          description: The last date this SNP’s mapping information was updated
+          example: 2021-10-19T22:22:55.015+0000
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/locations'
+          description: The SNP’s genomic locations
+        maf:
+          type: number
+          format: double
+          description: Minor allele frequency in the 1000 Genomes Phase 3 combined population
+          example: 0.39011
+        minor_allele:
+          type: string
+          description: Second most frequent allele in the 1000 Genomes Phase 3 combined population
+          example: C
+        alleles:
+          type: string
+          description: Reference allele / alternative allele(s)
+          example: C/A/G/T(forward strand)
+        most_severe_consequence:
+          type: string
+          description: Second most frequent allele in the 1000 Genomes Phase 3 combined population
+          example: Intron variant
+        mapped_genes:
+          type: array
+          items:
+            type: string
+            description: Gene(s) overlapping the variant. If a variant is intergenic, the closest 5' and 3' genes are listed
+            example: CCR6,HBS1L
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+
+    studies:
+      type: object
+      properties:
+        initial_sample_size:
+          type: string
+          description: Initial sample description
+          example: 3,117 European ancestry Bipolar disorder cases, 1,273 European ancestry Major depressive disorder cases
+        replication_sample_size:
+          type: string
+          description: Replication sample description
+          example: 3,117 European ancestry Bipolar disorder cases, 1,273 European ancestry Major depressive disorder cases
+        study_id:
+          type: integer
+          format: int64
+          description: primary Id of study
+          example: 123456
+        gxe:
+          type: boolean
+          description: Whether the study investigates a gene-environment interaction
+          example: true/false
+        gxg:
+          type: boolean
+          description: Whether the study investigates a gene-gene interaction
+          example: true/false
+        snp_count:
+          type: integer
+          format: int32
+          description: Number of SNPs passing QC
+          example: 1922309
+        qualifier:
+          type: string
+          description: Qualifier of number of SNPs passing QC (eg >)
+          example: NR
+        imputed:
+          type: boolean
+          description: Whether SNPs were imputed
+          example: true
+        pooled:
+          type: boolean
+          description: Whether samples were pooled
+          example: true
+        accession_id:
+          type: string
+          description: The study’s GWAS Catalog accession ID
+          example: GCST90013684
+        user_requested:
+          type: boolean
+          description: Whether the addition of this study to the Catalog was requested by a user
+          example: true/false
+        pubmed_id:
+          type: integer
+          format: int32
+          description: the pubmedId of the publication related to study
+          example: 39979475
+        platforms:
+          type: string
+          description: Genotyping platform(s) used in this study
+          example: Affymetrix [NR] (imputed)
+        disease_trait:
+          type: string
+          description: The trait under investigation
+          example: Coronary artery disease
+        genotyping_technologies:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+          description: The method used to genotype variants in the discovery stage
+          example: Genome-wide genotyping array
+        efo_traits:
+          type: array
+          items:
+            $ref: '#/components/schemas/efo-trait'
+          description: Ontology terms that best match the trait
+          example: EFO_0001645
+        discovery_ancestry:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+          description: A concatenated text containing discovery stage sample size along with ancestry category label and country of recruitment
+          example: 959 East Asian (China)
+        replication_ancestry:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+          description: A concatenated text containing replication stage sample size along with ancestry category label and country of recruitment
+          example: 1834 East Asian (China)
+        full_summary_stats:
+          type: string
+          description: ftp location of full summary stats file
+          example: http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90551001-GCST90552000/GCST90551842
+        terms_of_license:
+          type: string
+          description: Terms of use or license associated with the full genome-wide summary statistics
+          example: https://creativecommons.org/publicdomain/zero/1.0/
+        bg_efo_traits:
+          type: array
+          items:
+            $ref: '#/components/schemas/efo-trait'
+          description: Any background trait(s) shared by all individuals in the GWAS (e.g. in both cases and controls)
+          example: EFO_0003768
+        cohort:
+          type: array
+          items:
+            type: string
+          description: Cohort(s) represented in the discovery sample
+          example: UKBB, FINRISK
+        array_manufacturer:
+          type: array
+          items:
+            type: string
+          description: Manufacturer of the genotyping array used for the discovery stage
+          example: Illumina
+        full_summary_stats_available:
+          type: boolean
+          description: Whether or not full genome-wide summary statistics are available for download
+          example: true/false
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+    trait-mappings:
+      type: object
+      properties:
+        efo_trait:
+          type: string
+          description: Mapped Experimental Factor Ontology trait
+          example: Parkinson disease
+        uri:
+          type: string
+          description: URI of the EFO trait
+          example: http://purl.obolibrary.org/obo/MONDO_0005180
+        efo_id:
+          type: string
+          description: shortform of the EFO trait
+          example: MONDO_0005180
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+
+    unpublished-ancestries:
+      type: object
+      properties:
+        stage:
+          type: string
+          description: Stage of the experimental design
+          example: discovery, replication
+        sample_size:
+          type: integer
+          format: int32
+          description: Number of individuals in this group
+          example: 3000
+        cases:
+          type: integer
+          format: int32
+          description: Number of cases in this group
+          example: 2000
+        controls:
+          type: integer
+          format: int32
+          description: Number of controls in this group
+          example: 3000
+        sample_description:
+          type: string
+          description: Additional  relevant information required for the interpretation of results
+          example:  sex (males/females), age (adults/children)
+        ancestry_category:
+          type: string
+          description: Ancestry category group label, assigned to reduce complexity within the data sets and place samples in context
+          example: European
+        ancestry:
+          type: string
+          description: The most detailed ancestry descriptor provided by authors
+          example: All populations
+        ancestry_description:
+          type: string
+          description: Any additional ancestry descriptors relevant to the sample description
+          example: Pima Indian
+        country_recruitment:
+          type: string
+          description: List of country/countries where samples were recruited
+          example: U.S.|U.K.
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+    unpublished-studies:
+      type: object
+      properties:
+        genotyping_technology:
+          type: string
+          description: The method used to genotype variants in the discovery stage
+          example: Genome-wide genotyping array
+        study_accession:
+          type: string
+          description: The study’s GWAS Catalog accession ID
+          example: GCST90013684
+        array_manufacturer:
+          type: string
+          description: Genotyping platform manufacturer
+          example: Affymetrix
+        imputation:
+          type: boolean
+          description: Whether SNPs were imputed
+          example: true
+        variant_count:
+          type: integer
+          format: int32
+          description: The number of variants analysed in the discovery stage
+          example: 180000
+        summary_statistics_assembly:
+          type: string
+          description: Genome assembly for the summary statistics
+          example: GRCh38
+        agreed_to_cc0:
+          type: boolean
+          description: Whether or not the summary statistics are available under the terms of CC0 license
+          example: true
+        full_summary_stats:
+          type: string
+          description: ftp location of full summary stats file
+          example: http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90566001-GCST90567000/GCST90566393
+        array_information:
+          type: string
+          description: Additional information about the genotyping array
+          example: immunochip
+        sample_description:
+          type: string
+          description: Additional  relevant information required for the interpretation of results
+          example: sex (males/females), age (adults/children)
+        statistical_model:
+          type: string
+          description: Details of the statistical model used to determine association significance
+          example: linear regression
+        study_description:
+          type: string
+          description: Additional information about the study
+        disease_trait:
+          type: string
+          description: The trait under investigation
+          example: Coronary artery disease
+        efo_trait:
+          type: string
+          description: EFOs that best matching the trait
+          example: EFO_0001645
+        background_trait:
+          type: string
+          description: Any background trait(s) shared by all individuals in the GWAS (e.g. in both cases and controls)
+          example: Nicotine dependence
+        background_efo_trait:
+          type: string
+          description: EFOs that best match entered background trait
+          example: EFO_0003768
+        cohort:
+          type: string
+          description: Cohort(s) represented in the discovery sample
+          example: MVP|UKB|CARDIoGRAMplusC4D
+        cohort_id:
+          type: string
+          description: Cohort specific identifier(s) issued to this research study
+          example: UK Biobank ID
+        title:
+          type: string
+          description: Title of the draft manuscript, preprint, or project that the study is included in
+          example: Genome-wide association study on susceptibility genes associated with yang-deficiency constitution
+        first_Author:
+          type: string
+          description: Last name and initials of first author
+          example: John Doe
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+
+    collection-ancestries:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ancestries'
+
+    collection-genomic-contexts:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/genomic-contexts'
+
+    collection-loci:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/loci'
+
+    collection-unpublished-ancestries:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/unpublished-ancestries'
+
+    page-associations:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/associations'
+        page:
+          $ref: '#/components/schemas/page'
+
+    page-body-of-works:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/body-of-works'
+        page:
+          $ref: '#/components/schemas/page'
+
+    page-trait-mappings:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/trait-mappings'
+        page:
+          $ref: '#/components/schemas/page'
+
+    page-genes:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/genes'
+        page:
+          $ref: '#/components/schemas/page'
+
+    page-publications:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/publications'
+        page:
+          $ref: '#/components/schemas/page'
+
+    page-single-nucleotide-polymorphisms:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/single-nucleotide-polymorphisms'
+        page:
+          $ref: '#/components/schemas/page'
+
+    page-studies:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/studies'
+        page:
+          $ref: '#/components/schemas/page'
+
+    page-unpublished-studies:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/link'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/unpublished-studies'
+        page:
+          $ref: '#/components/schemas/page'

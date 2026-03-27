@@ -60,7 +60,6 @@ from gwascatalog.mcp.resources import (
     fetch_cohorts,
     fetch_schema,
     read_ancestry_labels,
-    read_countries,
     read_variant_consequences,
 )
 from gwascatalog.mcp.tools import get_associations, get_studies, get_traits
@@ -219,8 +218,9 @@ Normal analysis tasks should use MCP tools.
     ),
     mime_type="text/plain",
 )
-def gwascatalog_index() -> str:
+async def gwascatalog_index() -> str:
     record_resource_access("index")
+    logger.info("Returning index resource")
     return _RESOURCE_INDEX
 
 
@@ -251,7 +251,7 @@ async def gwascatalog_cohorts() -> dict:
     ),
     mime_type="application/json",
 )
-def gwascatalog_ancestry_labels() -> dict:
+async def gwascatalog_ancestry_labels() -> dict:
     record_resource_access("ancestry_labels")
     return read_ancestry_labels()
 
@@ -267,24 +267,9 @@ def gwascatalog_ancestry_labels() -> dict:
     ),
     mime_type="application/json",
 )
-def gwascatalog_variant_consequences() -> dict:
+async def gwascatalog_variant_consequences() -> dict:
     record_resource_access("variant_consequences")
     return read_variant_consequences()
-
-
-@mcp.resource(
-    "gwascatalog://reference/countries",
-    name="countries",
-    title="GWAS Catalog Countries of Recruitment",
-    description=(
-        "Valid country names accepted by the GWAS Catalog for the "
-        "'country of recruitment' field in study metadata."
-    ),
-    mime_type="application/json",
-)
-def gwascatalog_countries() -> dict:
-    record_resource_access("countries")
-    return read_countries()
 
 
 @mcp.resource(
