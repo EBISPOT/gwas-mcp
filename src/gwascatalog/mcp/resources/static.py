@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+from functools import cache
 from importlib import resources as importlib_resources
 from io import StringIO
 from typing import IO
@@ -30,11 +31,13 @@ def _read_data_file(filename: str) -> ColumnarData:
     return _csv_to_columnar(data)
 
 
+@cache
 def read_ancestry_labels() -> ColumnarData:
     """Return ancestry label categories as columnar data."""
     return _read_data_file("ancestry_labels.csv")
 
 
+@cache
 def read_variant_consequences() -> ColumnarData:
     """Return Ensembl variant consequence types as columnar data."""
     return _read_data_file("variant_consequences.csv")

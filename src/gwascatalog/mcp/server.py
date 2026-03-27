@@ -174,27 +174,18 @@ study population.
 - gwascatalog://docs/index
     Use when: first accessing the MCP to understand available resources
     Content: This index of resources and usage guidance
-    Refresh: Static
 - gwascatalog://reference/cohorts
     Use when: validating cohort identifiers
     Content: PGS Catalog cohort IDs and names
-    Refresh: 24 h
 - gwascatalog://reference/ancestry-labels
     Use when: validating ancestry group labels
     Content: Ancestry categories, descriptions, and example sub-populations
-    Refresh: Static
 - gwascatalog://reference/variant-consequences
     Use when: validating variant consequence terms
     Content: Sequence Ontology terms, accessions, display names, and IMPACT ratings
-    Refresh: Static
-- gwascatalog://reference/countries
-    Use when: validating country names
-    Content: Country names and codes
-    Refresh: Static
 - gwascatalog://reference/openapi-schema
     Use when: building custom integrations or processing large datasets outside MCP
     Content: OpenAPI schema for GWAS Catalog REST API v2
-    Refresh: 24 h
 
 ## Custom integrations
 
@@ -231,7 +222,6 @@ async def gwascatalog_index() -> str:
     title="GWAS Catalog Cohorts",
     description=(
         "Controlled vocabulary of cohort identifiers and names from the GWAS Catalog. "
-        "Updated weekly; cached for 24 hours."
     ),
     mime_type="application/json",
 )
@@ -281,7 +271,6 @@ async def gwascatalog_variant_consequences() -> dict:
         "Full OpenAPI specification for the GWAS Catalog REST API v2, in YAML format. "
         "Use this only if you need to understand endpoint structure, "
         "request parameters, or response shapes beyond what the MCP tools expose. "
-        "Updated daily; cached for 24 hours."
     ),
     mime_type="text/yaml",
 )
