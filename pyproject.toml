@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "gwas-mcp"
+name = "gwascatalog.mcp"
 version = "0.1.0"
 description = "GWAS Catalog Model Context Protocol (MCP) server"
 authors = [
