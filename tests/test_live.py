@@ -41,10 +41,10 @@ async def test_get_associations_by_trait(client):
 
 
 async def test_get_traits_by_id(client):
-    params = GetTraitsParams(efo_id="EFO_0001060")
+    params = GetTraitsParams(efo_id="MONDO_0005130")
     fetch = await client.get_efo_traits(params)
     assert len(fetch["items"]) == 1
-    assert fetch["items"][0]["efo_id"] == "EFO_0001060"
+    assert fetch["items"][0]["efo_id"] == "MONDO_0005130"
     assert "celiac" in fetch["items"][0]["efo_trait"].lower()
     assert fetch["page"] is None
 
