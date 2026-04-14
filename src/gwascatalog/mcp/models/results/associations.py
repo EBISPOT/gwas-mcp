@@ -69,24 +69,20 @@ PValueExponentField = Annotated[
 # effect sizes
 
 OrValue = Annotated[
-    str,
-    BeforeValidator(_none_if_placeholder),
+    _NRStr,
     Field(description="Odds ratio string format", examples=["0.78137505"]),
 ]
 
 BetaField = Annotated[
-    str,
-    BeforeValidator(_none_if_placeholder),
+    _NRStr,
     Field(description="A concatenated text containing beta number, direction and unit"),
 ]
 RangeField = Annotated[
-    str,
-    BeforeValidator(_none_if_placeholder),
+    _NRStr,
     Field(description="95% confidence interval", examples=["12.41-19.61"]),
 ]
 DescriptionField = Annotated[
-    str,
-    BeforeValidator(_none_if_placeholder),
+    _NRStr,
     Field(
         description="Additional comment relating to beta or OR value",
         examples=["Discovery"],

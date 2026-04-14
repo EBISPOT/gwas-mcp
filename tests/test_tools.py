@@ -272,6 +272,38 @@ async def test_get_associations_detail(mock_ctx, mock_client):
     assert result.pagination.truncated is False
 
 
+async def test_get_associations_allows_null_beta(mock_ctx, mock_client):
+    mock_client.get_associations.return_value = {
+        "items": [
+            {
+                "association_id": 188116214,
+                "risk_frequency": "0.28",
+                "p_value": 2e-13,
+                "beta": None,
+                "range": "[0.18-0.33]",
+                "mapped_genes": ["HLA-DPB2"],
+                "locations": ["6:33114046"],
+                "efo_traits": [
+                    {
+                        "efo_id": "EFO_0001060",
+                        "efo_trait": "celiac disease",
+                    }
+                ],
+                "accession_id": "GCST90468120",
+                "snp_effect_allele": ["rs9277626-G"],
+            }
+        ],
+        "page": None,
+    }
+
+    result = await gwascatalog_get_associations(
+        mock_ctx,
+        association_id=188116214,
+    )
+    assert len(result.data) == 1
+    assert result.data[0].beta is None
+
+
 async def test_get_associations_empty(mock_ctx, mock_client):
     mock_client.get_associations.return_value = {
         "items": [],
