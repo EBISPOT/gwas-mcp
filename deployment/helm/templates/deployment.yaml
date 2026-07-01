@@ -23,6 +23,8 @@ spec:
         prometheus.io/port: "{{ .Values.service.metricsPort }}"
         prometheus.io/path: "/metrics"
     spec:
+      imagePullSecrets:
+        - name: gitlab-registry
       terminationGracePeriodSeconds: 30
       containers:
         - name: {{ .Values.service.name }}
