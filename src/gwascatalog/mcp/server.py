@@ -68,6 +68,40 @@ from mcp.types import ToolAnnotations
 
 logger = logging.getLogger(__name__)
 settings = Settings()
+_MCP_BROWSER_FALLBACK_HTML = b"""<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>GWAS Catalog MCP endpoint</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      font: 16px/1.5 system-ui, sans-serif;
+      display: grid;
+      min-height: 100vh;
+      place-items: center;
+    }
+    main { max-width: 42rem; padding: 2rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>GWAS Catalog MCP endpoint</h1>
+    <p>
+      This is a Model Context Protocol endpoint for agents and agentic IDEs
+      such as Codex or Claude Code. It is not a normal web page.
+    </p>
+    <p>
+      For human-readable information, visit the
+      <a href="https://github.com/EBISPOT/gwas-mcp">documentation</a>.
+    </p>
+  </main>
+</body>
+</html>
+"""
 MCP_TOOL_ANNOTATIONS = ToolAnnotations(
     readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
 )
@@ -95,6 +129,62 @@ mcp = FastMCP(
 
 def _get_client(ctx: Context) -> GwasCatalogClient:
     return ctx.request_context.lifespan_context["client"]
+
+
+def _is_browser_navigation(scope: dict[str, Any], path: str) -> bool:
+    if scope.get("type") != "http":
+        return False
+    if scope.get("method") not in {"GET", "HEAD"}:
+        return False
+    if scope.get("path") != path:
+        return False
+
+    headers = {
+        key.decode("latin-1").lower(): value.decode("latin-1").lower()
+        for key, value in scope.get("headers", [])
+    }
+    return (
+        "text/html" in headers.get("accept", "")
+        or headers.get("sec-fetch-dest") == "document"
+        or headers.get("sec-fetch-mode") == "navigate"
+    )
+
+
+def _with_browser_fallback(app: Any, path: str) -> Any:
+    async def wrapped(scope: dict[str, Any], receive: Any, send: Any) -> None:
+        if not _is_browser_navigation(scope, path):
+            await app(scope, receive, send)
+            return
+
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [
+                    (b"content-type", b"text/html; charset=utf-8"),
+                    (b"content-length", str(len(_MCP_BROWSER_FALLBACK_HTML)).encode()),
+                    (b"cache-control", b"no-store"),
+                    (b"x-content-type-options", b"nosniff"),
+                ],
+            }
+        )
+        await send(
+            {
+                "type": "http.response.body",
+                "body": b""
+                if scope.get("method") == "HEAD"
+                else _MCP_BROWSER_FALLBACK_HTML,
+            }
+        )
+
+    return wrapped
+
+
+def streamable_http_app() -> Any:
+    return _with_browser_fallback(
+        mcp.streamable_http_app(),
+        mcp.settings.streamable_http_path,
+    )
 
 
 # ---- Listing telemetry ----
@@ -571,7 +661,18 @@ def main() -> None:
         mcp.settings.host,
         mcp.settings.port,
     )
-    mcp.run(transport=transport)
+    if transport == "stdio":
+        mcp.run(transport=transport)
+        return
+
+    import uvicorn
+
+    uvicorn.run(
+        streamable_http_app(),
+        host=mcp.settings.host,
+        port=mcp.settings.port,
+        log_level=mcp.settings.log_level.lower(),
+    )
 
 
 if __name__ == "__main__":
