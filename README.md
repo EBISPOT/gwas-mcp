@@ -1,15 +1,64 @@
-# gwas-mcp
+# GWAS Catalog MCP
 
-Production-oriented MCP server for GWAS Catalog REST API resources.
+A Model Context Protocol (MCP) server that lets AI agents and agentic IDEs
+query the [GWAS Catalog](https://www.ebi.ac.uk/gwas/) in plain language —
+searching traits, studies, and variant–trait associations from published
+genome-wide association studies.
 
-## Run (stdio)
+You don't need to install anything. A hosted server is live at:
 
-```bash
-python -m gwas_mcp.server --transport stdio
+```
+https://ebi.ac.uk/gwas/mcp
 ```
 
-## Run (HTTP streamable)
+## Connect
+
+### Claude Code
 
 ```bash
-GWASCATALOG_HOST=0.0.0.0 GWASCATALOG_PORT=8080 python -m gwas_mcp.server --transport http
+claude mcp add --transport http gwas-mcp https://ebi.ac.uk/gwas/mcp
 ```
+
+Add `--scope user` to make it available in all your projects.
+
+### Codex
+
+Add this to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.gwas-mcp]
+url = "https://ebi.ac.uk/gwas/mcp"
+```
+
+Any MCP client that supports remote (streamable HTTP) servers can connect using
+the same URL.
+
+## What you can ask
+
+The server gives your agent three tools:
+
+| Tool | What it finds |
+|------|---------------|
+| Traits | EFO traits (diseases, phenotypes) by name, gene, or publication |
+| Studies | GWAS studies by trait, ancestry, gene, or accession |
+| Associations | Variant–trait associations with statistics (p-value, odds ratio, …) |
+
+It also exposes reference data (ancestry labels, cohort IDs, variant
+consequences) that agents use to interpret results.
+
+You don't call these directly — just ask your agent questions like:
+
+- "What EFO trait covers type 2 diabetes?"
+- "Find GWAS studies of type 2 diabetes in East Asian cohorts."
+- "What variants are associated with LDL cholesterol near the *APOE* gene?"
+- "Show the strongest associations for study accession GCST000001."
+
+## Run it yourself
+
+Most people should use the server hosted above.
+
+The best way to test and develop the server locally is to run [MCP Inspector](https://github.com/modelcontextprotocol/inspector) in STDIO mode.
+
+## License
+
+Apache-2.0
