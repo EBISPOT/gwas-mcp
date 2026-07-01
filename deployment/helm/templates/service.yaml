@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ .Values.service.name }}
 spec:
-  type: NodePort
+  type: {{ .Values.service.type }}
   selector:
     app: {{ .Values.service.name }}
   ports:

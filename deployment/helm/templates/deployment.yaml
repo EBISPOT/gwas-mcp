@@ -6,6 +6,11 @@ metadata:
     app: {{ .Values.service.name }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: {{ .Values.service.name }}
@@ -18,6 +23,7 @@ spec:
         prometheus.io/port: "{{ .Values.service.metricsPort }}"
         prometheus.io/path: "/metrics"
     spec:
+      terminationGracePeriodSeconds: 30
       containers:
         - name: {{ .Values.service.name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -28,17 +34,26 @@ spec:
           env:
             - name: GWASCATALOG_HOST
               value: "0.0.0.0"
+            - name: GWASCATALOG_API_BASE_URL
+              value: {{ .Values.env.apiBaseUrl | quote }}
             - name: GWASCATALOG_STREAMABLE_HTTP_PATH
-              value: {{ .Values.ingress.mcpPath }}
+              value: {{ .Values.ingress.mcpPath | quote }}
             - name: GWASCATALOG_METRICS_PORT
               value: "{{ .Values.service.metricsPort }}"
             - name: GWASCATALOG_HTTP_PROXY
-              value: {{ .Values.env.httpProxy }}
+              value: {{ .Values.env.httpProxy | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.service.containerPort }}
             - name: metrics
               containerPort: {{ .Values.service.metricsPort }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
           resources:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}
