@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, TypedDict
 
 import httpx
 
+_STUDY_SORT_FIELDS = {"accession_id": "accession_Id"}
+
 if TYPE_CHECKING:
     from gwascatalog.mcp.models import (
         GetAssociationsParams,
@@ -65,6 +67,8 @@ class GwasCatalogClient:
                 return FetchResult(items=[], page=None)
             return FetchResult(items=[data], page=None)
         query = params.model_dump(exclude_none=True)
+        if query.get("sort") in _STUDY_SORT_FIELDS:
+            query["sort"] = _STUDY_SORT_FIELDS[query["sort"]]
         data = await self.get("/v2/studies", params=query)
         return FetchResult(
             items=data.get("_embedded", {}).get("studies", []),
@@ -83,6 +87,8 @@ class GwasCatalogClient:
                 return FetchResult(items=[], page=None)
             return FetchResult(items=[data], page=None)
         query = params.model_dump(exclude_none=True)
+        if query.get("sort") == "risk_frequency" and query.get("direction") == "asc":
+            del query["direction"]
         data = await self.get("/v2/associations", params=query)
         return FetchResult(
             items=data.get("_embedded", {}).get("associations", []),
