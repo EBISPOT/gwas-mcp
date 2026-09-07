@@ -63,7 +63,7 @@ from gwascatalog.mcp.resources import (
     read_variant_consequences,
 )
 from gwascatalog.mcp.tools import get_associations, get_studies, get_traits
-from mcp.server.fastmcp import Context, FastMCP
+from mcp.server.mcpserver import Context, MCPServer
 from mcp.types import ToolAnnotations
 
 logger = logging.getLogger(__name__)
@@ -103,12 +103,15 @@ _MCP_BROWSER_FALLBACK_HTML = b"""<!doctype html>
 </html>
 """
 MCP_TOOL_ANNOTATIONS = ToolAnnotations(
-    readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    read_only_hint=True,
+    destructive_hint=False,
+    idempotent_hint=True,
+    open_world_hint=True,
 )
 
 
 @asynccontextmanager
-async def lifespan(_: FastMCP) -> AsyncIterator[dict[str, Any]]:
+async def lifespan(_: MCPServer) -> AsyncIterator[dict[str, Any]]:
     client = GwasCatalogClient(settings.api_base_url, settings.timeout_seconds)
     try:
         yield {"client": client}
@@ -116,13 +119,9 @@ async def lifespan(_: FastMCP) -> AsyncIterator[dict[str, Any]]:
         await client.close()
 
 
-mcp = FastMCP(
+mcp = MCPServer(
     name="gwascatalog",
     instructions=GWASCATALOG_MCP_INSTRUCTIONS,
-    host=settings.host,
-    port=settings.port,
-    streamable_http_path=settings.streamable_http_path,
-    stateless_http=True,
     lifespan=lifespan,
 )
 
@@ -182,8 +181,12 @@ def _with_browser_fallback(app: Any, path: str) -> Any:
 
 def streamable_http_app() -> Any:
     return _with_browser_fallback(
-        mcp.streamable_http_app(),
-        mcp.settings.streamable_http_path,
+        mcp.streamable_http_app(
+            host=settings.host,
+            streamable_http_path=settings.streamable_http_path,
+            stateless_http=True,
+        ),
+        settings.streamable_http_path,
     )
 
 
@@ -203,8 +206,8 @@ async def _instrumented_list_resources() -> list:
     return await _original_list_resources()
 
 
-mcp._mcp_server.list_tools()(_instrumented_list_tools)
-mcp._mcp_server.list_resources()(_instrumented_list_resources)
+mcp.list_tools = _instrumented_list_tools
+mcp.list_resources = _instrumented_list_resources
 
 
 # ---- Resources ----
@@ -658,8 +661,8 @@ def main() -> None:
     logger.info(
         "Starting MCP server: transport=%s host=%s port=%s",
         transport,
-        mcp.settings.host,
-        mcp.settings.port,
+        settings.host,
+        settings.port,
     )
     if transport == "stdio":
         mcp.run(transport=transport)
@@ -669,8 +672,8 @@ def main() -> None:
 
     uvicorn.run(
         streamable_http_app(),
-        host=mcp.settings.host,
-        port=mcp.settings.port,
+        host=settings.host,
+        port=settings.port,
         log_level=mcp.settings.log_level.lower(),
     )
 
