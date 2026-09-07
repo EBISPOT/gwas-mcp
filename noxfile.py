@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-import os
-
 import nox
 
 # Use uv for environment creation and package installation
@@ -57,35 +55,30 @@ def lint(session):
 
 @nox.session(venv_backend="none")
 def build_image(session: nox.Session) -> None:
-    """Build the documentation Docker image and save it as a tarball.
-
-    Usage:  nox -s build_docs_image -- <version>
-    Produces: dist/docs-image-<version>.tar
-    """
+    """Publish an AMD64 image: nox -s build_image -- 1.0.2 [--promote]."""
     if not session.posargs:
-        session.error("Specify a version, e.g.: nox -s build_image -- 1.2.3")
+        session.error("Specify a version, e.g.: nox -s build_image -- 1.0.2")
+    session.run("python", "scripts/publish_image.py", *session.posargs, external=True)
 
-    version = session.posargs[0]
-    local_tag = f"dockerhub.ebi.ac.uk/gwas/gwas-mcp:{version}"
 
-    # IMPORTANT
-    # ancient K8S clusters only support legacy media types,
-    # so we disable BuildKit's OCI media types to ensure compatibility
-    os.environ["BUILDKIT_OCI_MEDIA_TYPES"] = "0"
-    session.run(
-        "docker",
-        "build",
-        "--platform",
-        "linux/amd64,linux/arm64",
-        "--provenance=false",
-        "-f",
-        "deployment/Dockerfile",
-        "-t",
-        local_tag,
-        ".",
-        "--push",
-        external=True,
-    )
+@nox.session(venv_backend="none")
+def helm(session: nox.Session) -> None:
+    """Validate both Helm environments and startup-probe compatibility paths."""
+    for environment, kube_version in (("dev", "1.19.0"), ("prod", "1.20.0")):
+        values = f"deployment/helm/values-{environment}.yaml"
+        session.run("helm", "lint", "deployment/helm", "-f", values, external=True)
+        session.run(
+            "helm",
+            "template",
+            "ci-check",
+            "deployment/helm",
+            "-f",
+            values,
+            "--kube-version",
+            kube_version,
+            external=True,
+            silent=True,
+        )
 
 
 if __name__ == "__main__":

@@ -33,9 +33,7 @@ from gwascatalog.mcp.models.params.types import (
 )
 
 __all__ = [
-    "GetStudiesParams",
-    "GetTraitsParams",
-    "GetAssociationsParams",
+    "URI",
     "AccessionId",
     "AncestralGroup",
     "AssociationId",
@@ -45,6 +43,9 @@ __all__ = [
     "EfoId",
     "EfoTrait",
     "FullPValueSet",
+    "GetAssociationsParams",
+    "GetStudiesParams",
+    "GetTraitsParams",
     "GxE",
     "MappedGene",
     "PageField",
@@ -55,5 +56,4 @@ __all__ = [
     "SortDirectionField",
     "StudySortKeyField",
     "TraitSortKeyField",
-    "URI",
 ]

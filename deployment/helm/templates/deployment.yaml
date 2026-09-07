@@ -50,8 +50,32 @@ spec:
             - name: metrics
               containerPort: {{ .Values.service.metricsPort }}
           readinessProbe:
-            tcpSocket:
-              port: http
+            exec:
+              command: ["/app/.venv/bin/python", "-m", "gwascatalog.mcp.health"]
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 1
+            successThreshold: 1
+            {{- if semverCompare "<1.20-0" .Capabilities.KubeVersion.Version }}
+            initialDelaySeconds: 60
+            {{- end }}
+          livenessProbe:
+            exec:
+              command: ["/app/.venv/bin/python", "-m", "gwascatalog.mcp.health"]
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+            {{- if semverCompare "<1.20-0" .Capabilities.KubeVersion.Version }}
+            initialDelaySeconds: 60
+            {{- end }}
+          {{- if semverCompare ">=1.20-0" .Capabilities.KubeVersion.Version }}
+          startupProbe:
+            exec:
+              command: ["/app/.venv/bin/python", "-m", "gwascatalog.mcp.health"]
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 6
+          {{- end }}
           lifecycle:
             preStop:
               exec:

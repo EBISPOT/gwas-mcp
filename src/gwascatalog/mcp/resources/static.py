@@ -16,8 +16,8 @@ def _csv_to_columnar(file: IO[str]) -> ColumnarData:
     reader = csv.DictReader(file)
     columns: dict[str, list[str]] = {col: [] for col in reader.fieldnames or []}
     for row in reader:
-        for col in columns:
-            columns[col].append(row[col])
+        for col, values in columns.items():
+            values.append(row[col])
     return columns
 
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gwas-mcp"
-version = "1.0.1"
+version = "1.0.2"
 description = "GWAS Catalog Model Context Protocol (MCP) server"
 authors = [
     { name = "Benjamin Wingfield", email = "bwingfield@ebi.ac.uk" },
@@ -19,7 +19,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "httpx>=0.28.1",
-    "mcp[cli]>=1.26.0",
+    "mcp[cli]==2.1.1",
     "opentelemetry-api>=1.20.0",
     "opentelemetry-sdk>=1.20.0",
     "opentelemetry-exporter-prometheus>=0.50b0",
