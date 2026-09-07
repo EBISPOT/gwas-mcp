@@ -59,6 +59,22 @@ Most people should use the server hosted above.
 
 The best way to test and develop the server locally is to run [MCP Inspector](https://github.com/modelcontextprotocol/inspector) in STDIO mode.
 
+### Kubernetes health checks
+
+The Helm deployment checks a fresh MCP initialisation handshake on the local
+HTTP endpoint. Readiness fails after one unsuccessful check; liveness restarts
+the container after three consecutive failures. Both run every 30 seconds,
+with a 5-second handshake deadline and a 10-second process timeout. Startup
+allows approximately 60 seconds, using a startup probe on Kubernetes 1.20+
+and initial delays on older clusters.
+
+These probes do not query the REST API. They detect local MCP initialisation
+failures; external monitoring is still needed for ingress and public connectivity.
+
+The development endpoint is `https://wwwdev.ebi.ac.uk/gwas/mcp`. Both development
+Helm paths are `/gwas/mcp`; an older deployed path containing `/api` requires a
+Helm release update using the current values.
+
 ## License
 
 Apache-2.0

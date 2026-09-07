@@ -14,6 +14,7 @@ service:
   metricsPort: 9464
 
 ingress:
+  # Public development endpoint: https://wwwdev.ebi.ac.uk/gwas/mcp
   name: gwas-mcp
   annotations: {}
   path: "/gwas/mcp"
