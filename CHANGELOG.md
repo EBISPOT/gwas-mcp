@@ -2,6 +2,8 @@
 
 ## 1.0.2 - 2026-09-07
 
+- Add GitLab CI checks and AMD64 image publishing for stable release tags,
+  with `latest` tracking the highest published stable version.
 - Upgrade the MCP Python SDK to 2.1.1 while preserving stateless HTTP, existing
   tools and resources, stdio support and telemetry.
 - Add Kubernetes probes that check fresh MCP initialisation, remove unready
