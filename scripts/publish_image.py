@@ -1,4 +1,4 @@
-"""Publish AMD64 releases and promote the highest published stable Git tag."""
+"""Build AMD64 dev images and promote their exact manifests to release tags."""
 
 from __future__ import annotations
 
@@ -52,15 +52,29 @@ def exists(version: str) -> bool:
     raise RuntimeError(f"Could not inspect {IMAGE}:{version}: {result.stderr}")
 
 
-def publish(tag: str, *, promote: bool = False) -> None:
-    version_key(tag)
-    version = tag.removeprefix("v")
-    metadata = tomllib.loads(Path("pyproject.toml").read_text())
-    if metadata["project"]["version"] != version:
-        raise ValueError(
-            "Release tag must match the application version in pyproject.toml"
-        )
+def alias(source_digest: str, tag: str) -> None:
+    run(
+        "docker",
+        "buildx",
+        "imagetools",
+        "create",
+        "--prefer-index=false",
+        "--tag",
+        f"{IMAGE}:{tag}",
+        f"{IMAGE}@{source_digest}",
+    )
+    if digest(tag) != source_digest:
+        raise RuntimeError(f"{tag} does not match the source image digest")
 
+
+def publish_dev(commit: str) -> None:
+    if not re.fullmatch(r"[0-9a-f]{40}", commit) or commit != run(
+        "git", "rev-parse", "HEAD"
+    ):
+        raise ValueError(
+            "Dev image commit must be the full SHA of the current checkout"
+        )
+    version = f"dev-{commit}"
     if not exists(version):
         run(
             "docker",
@@ -79,6 +93,36 @@ def publish(tag: str, *, promote: bool = False) -> None:
         )
         run("docker", "push", f"{IMAGE}:{version}")
 
+    print(f"Dev image: {IMAGE}:{version}")
+    print(
+        "helm upgrade --install gwas-mcp deployment/helm --namespace gwas-dev "
+        f"-f deployment/helm/values-dev.yaml --set-string image.tag={version}"
+    )
+
+
+def publish(tag: str, *, promote: bool = False) -> None:
+    version_key(tag)
+    version = tag.removeprefix("v")
+    metadata = tomllib.loads(Path("pyproject.toml").read_text())
+    if metadata["project"]["version"] != version:
+        raise ValueError(
+            "Release tag must match the application version in pyproject.toml"
+        )
+
+    source = f"dev-{run('git', 'rev-parse', 'HEAD')}"
+    if not exists(source):
+        raise RuntimeError(
+            f"Missing {IMAGE}:{source}; build and test this commit on dev first"
+        )
+    source_digest = digest(source)
+    if exists(version):
+        if digest(version) != source_digest:
+            raise RuntimeError(
+                f"Refusing to replace existing release {version} with a different image"
+            )
+    else:
+        alias(source_digest, version)
+
     if not promote:
         return
 
@@ -94,24 +138,18 @@ def publish(tag: str, *, promote: bool = False) -> None:
         if exists(candidate)
     )
     selected_digest = digest(latest)
-    run(
-        "docker",
-        "buildx",
-        "imagetools",
-        "create",
-        "--prefer-index=false",
-        "--tag",
-        f"{IMAGE}:latest",
-        f"{IMAGE}@{selected_digest}",
-    )
-    if digest("latest") != selected_digest:
-        raise RuntimeError("latest does not match the selected release digest")
+    alias(selected_digest, "latest")
     print(f"Published {version}; latest points to {latest}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("tag")
-    parser.add_argument("--promote", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--promote", action="store_true")
+    mode.add_argument("--dev", action="store_true")
     args = parser.parse_args()
-    publish(args.tag, promote=args.promote)
+    if args.dev:
+        publish_dev(args.tag)
+    else:
+        publish(args.tag, promote=args.promote)

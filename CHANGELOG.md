@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Build AMD64 `dev-<commit SHA>` images after successful checks on pushes to
+  `dev`, and print the command for manual deployment.
+- Promote the matching dev image to release tags without rebuilding; fail if
+  the dev image is missing or an existing release points to a different image.
+
 ## 1.0.2 - 2026-09-07
 
 - Add GitLab CI checks and AMD64 image publishing for stable release tags,

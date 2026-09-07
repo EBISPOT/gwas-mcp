@@ -39,7 +39,7 @@ helm_checks:
   script:
     - uv run --with nox nox -s helm
 
-publish_release:
+.docker-publish:
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.5.1-cli
   services:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:27.5.1-dind
@@ -56,6 +56,18 @@ publish_release:
     - apk add --no-cache python3 py3-pip git
     - pip install --break-system-packages uv==0.8.18
     - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login --username "$CI_REGISTRY_USER" --password-stdin dockerhub.ebi.ac.uk
+
+publish_dev:
+  extends: .docker-publish
+  script:
+    - uv run --with nox nox -s build_image -- "$CI_COMMIT_SHA" --dev
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE == "push"'
+
+publish_release:
+  extends: .docker-publish
+  # Set the application version before building on dev. After manual testing,
+  # tag that exact commit; release publication reuses its dev image digest.
   script:
     - uv run --with nox nox -s build_image -- "$CI_COMMIT_TAG" --promote
   rules:
