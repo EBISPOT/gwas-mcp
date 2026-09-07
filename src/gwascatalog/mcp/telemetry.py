@@ -34,8 +34,8 @@ def init_telemetry() -> None:
     counter event is recorded so that at least one ``gwascatalog_*`` metric
     is immediately visible on ``/metrics``.
     """
-    global _provider, tool_calls, tool_results  # noqa: PLW0603
-    global resource_accesses, tool_duration, list_requests  # noqa: PLW0603
+    global _provider, tool_calls, tool_results
+    global resource_accesses, tool_duration, list_requests
 
     if _provider is not None:
         return
