@@ -118,6 +118,20 @@ def test_version_validation(monkeypatch, tmp_path):
 
 
 @pytest.mark.parametrize(
+    "output",
+    [
+        "sha256:" + "a" * 64,
+        "Name: dockerhub.ebi.ac.uk/gwas/gwas-mcp:1.0.2\n"
+        "MediaType: application/vnd.docker.distribution.manifest.v2+json\n"
+        "Digest:    sha256:" + "b" * 64,
+    ],
+)
+def test_digest_parses_buildx_output(monkeypatch, output):
+    monkeypatch.setattr(release, "run", lambda *args: output)
+    assert release.digest("1.0.2") == output.split("Digest:")[-1].strip()
+
+
+@pytest.mark.parametrize(
     ("code", "error", "expected"),
     [
         (0, "", True),
