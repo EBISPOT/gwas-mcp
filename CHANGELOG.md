@@ -1,12 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.3 - 2026-09-08
 
-- Point the development MCP deployment at the `gwas-rest-api-dev` service.
-- Build AMD64 `dev-<commit SHA>` images after successful checks on pushes to
-  `dev`, and print the command for manual deployment.
-- Require release tags to point to `main`, then build the release image from
-  that tag; existing release tags remain immutable.
+- Fix release image digest parsing with Buildx descriptor output.
 
 ## 1.0.3 - 2026-09-08
 
