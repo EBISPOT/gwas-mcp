@@ -1,4 +1,4 @@
-"""Build AMD64 dev images and promote their exact manifests to release tags."""
+"""Build and publish AMD64 development and release images."""
 
 from __future__ import annotations
 
@@ -104,7 +104,7 @@ def publish_dev(commit: str) -> None:
     )
 
 
-def publish(tag: str, *, promote: bool = False) -> None:
+def publish(tag: str) -> None:
     version_key(tag)
     version = tag.removeprefix("v")
     metadata = tomllib.loads(Path("pyproject.toml").read_text())
@@ -123,11 +123,8 @@ def publish(tag: str, *, promote: bool = False) -> None:
     if not exists(version):
         build(version)
 
-    if not promote:
-        return
-
-    # CI holds one resource_group across publishing and promotion. Refresh tags
-    # inside that lock so pipeline completion order cannot roll latest backward.
+    # CI holds one resource_group across publishing. Refresh tags inside that
+    # lock so pipeline completion order cannot roll latest backward.
     tags = run("git", "tag", "--list").splitlines()
     versions = {tag.removeprefix("v") for tag in tags if VERSION.fullmatch(tag)}
     versions.add(version)
@@ -145,10 +142,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("tag")
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--promote", action="store_true")
     mode.add_argument("--dev", action="store_true")
     args = parser.parse_args()
     if args.dev:
         publish_dev(args.tag)
     else:
-        publish(args.tag, promote=args.promote)
+        publish(args.tag)

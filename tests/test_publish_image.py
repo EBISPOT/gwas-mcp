@@ -21,7 +21,7 @@ COMMIT = "a" * 40
         ({"1.0.2"}, ["v2.0.0", "v3.0.0-rc.1", f"dev-{COMMIT}"], "1.0.2"),
     ],
 )
-def test_publish_and_promote(monkeypatch, tmp_path, published, tags, expected):
+def test_publish_release(monkeypatch, tmp_path, published, tags, expected):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.2"\n')
     images = {version: f"sha256:{version}" for version in published}
@@ -47,7 +47,7 @@ def test_publish_and_promote(monkeypatch, tmp_path, published, tags, expected):
     )
     monkeypatch.setattr(release, "exists", lambda version: version in images)
     monkeypatch.setattr(release, "digest", images.__getitem__)
-    release.publish("v1.0.2", promote=True)
+    release.publish("v1.0.2")
     built = "1.0.2" not in published
     assert any(call[:3] == ("docker", "buildx", "build") for call in calls) is built
     assert (("docker", "push", f"{release.IMAGE}:1.0.2") in calls) is built
@@ -55,7 +55,7 @@ def test_publish_and_promote(monkeypatch, tmp_path, published, tags, expected):
 
 
 @pytest.mark.parametrize("already_built", [False, True])
-def test_dev_build_is_immutable_and_never_promotes(monkeypatch, capsys, already_built):
+def test_dev_build_is_immutable(monkeypatch, capsys, already_built):
     calls = []
 
     def run(*args):
@@ -102,7 +102,7 @@ def test_release_requires_main_ancestor(monkeypatch, tmp_path):
         lambda *args, **kwargs: subprocess.CompletedProcess(args, 1),
     )
     with pytest.raises(RuntimeError, match="reachable from main"):
-        release.publish("v1.0.2", promote=True)
+        release.publish("v1.0.2")
     assert ("git", "fetch", "origin", "main", "--tags") in calls
 
 
@@ -140,7 +140,7 @@ def test_registry_errors_are_not_missing_images(monkeypatch, code, error, expect
         assert release.exists("1.0.2") is expected
 
 
-def test_promotion_verification_failure(monkeypatch):
+def test_latest_verification_failure(monkeypatch):
     monkeypatch.setattr(release, "run", lambda *args: "")
     monkeypatch.setattr(release, "digest", lambda version: "sha256:wrong")
     with pytest.raises(RuntimeError, match="source image digest"):

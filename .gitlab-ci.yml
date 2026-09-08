@@ -68,6 +68,6 @@ publish_release:
   extends: .docker-publish
   # Release tags must point at main; the release image is built from that tag.
   script:
-    - uv run --with nox nox -s build_image -- "$CI_COMMIT_TAG" --promote
+    - uv run --with nox nox -s build_image -- "$CI_COMMIT_TAG"
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/ && $CI_COMMIT_REF_PROTECTED == "true"'

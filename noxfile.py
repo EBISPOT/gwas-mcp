@@ -55,7 +55,7 @@ def lint(session):
 
 @nox.session(venv_backend="none")
 def build_image(session: nox.Session) -> None:
-    """Build a dev image or a release image from a main commit."""
+    """Build a dev or release image."""
     if not session.posargs:
         session.error("Specify a version, e.g.: nox -s build_image -- 1.0.2")
     session.run("python", "scripts/publish_image.py", *session.posargs, external=True)
