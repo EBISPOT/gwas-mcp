@@ -8,6 +8,10 @@
 - Require release tags to point to `main`, then build the release image from
   that tag; existing release tags remain immutable.
 
+## 1.0.3 - 2026-09-08
+
+- Fix release image digest parsing with Buildx descriptor output.
+
 ## 1.0.2 - 2026-09-07
 
 - Add GitLab CI checks and AMD64 image publishing for stable release tags,
