@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: dockerhub.ebi.ac.uk/gwas/gwas-mcp
-  tag: 1.0.0
+  tag: "1.0.2"
   pullPolicy: Always
 
 service:
@@ -14,13 +14,14 @@ service:
   metricsPort: 9464
 
 ingress:
+  # Public development endpoint: https://wwwdev.ebi.ac.uk/gwas/mcp
   name: gwas-mcp
   annotations: {}
   path: "/gwas/mcp"
   mcpPath: "/gwas/mcp"
 
 env:
-  apiBaseUrl: "http://gwas-rest-api.gwas-dev.svc.cluster.local:8080/gwas/rest/api"
+  apiBaseUrl: "http://gwas-rest-api-dev.gwas-dev.svc.cluster.local:8080/gwas/rest/api"
   httpProxy: "http://hh-wwwcache.ebi.ac.uk:3128"
 
 resources:

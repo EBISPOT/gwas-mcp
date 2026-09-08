@@ -59,6 +59,10 @@ Most people should use the server hosted above.
 
 The best way to test and develop the server locally is to run [MCP Inspector](https://github.com/modelcontextprotocol/inspector) in STDIO mode.
 
+The development endpoint is `https://wwwdev.ebi.ac.uk/gwas/mcp`. Both development
+Helm paths are `/gwas/mcp`; an older deployed path containing `/api` requires a
+Helm release update using the current values.
+
 ## License
 
 Apache-2.0

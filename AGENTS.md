@@ -7,7 +7,7 @@ The purpose of this repository is to enable natural language queries of data dis
 the GWAS Catalog REST API (v2, https://www.ebi.ac.uk/gwas/rest/api/v2/) by providing
  MCP tools, resources, and prompts.
 
- The project is implemented using Python 3.13, fastmcp v1, and Pydantic v2. uv is used
+ The project is implemented using Python 3.13, MCP Python SDK v2.1.1, and Pydantic v2. uv is used
  for dependency management and nox is used for automation.
 
  ## Environment setup

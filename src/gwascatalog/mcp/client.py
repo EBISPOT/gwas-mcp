@@ -88,6 +88,7 @@ class GwasCatalogClient:
             return FetchResult(items=[data], page=None)
         query = params.model_dump(exclude_none=True)
         if query.get("sort") == "risk_frequency" and query.get("direction") == "asc":
+            # ponytail: current REST API returns 500 for this valid MCP query.
             del query["direction"]
         data = await self.get("/v2/associations", params=query)
         return FetchResult(
