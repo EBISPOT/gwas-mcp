@@ -67,6 +67,25 @@ def alias(source_digest: str, tag: str) -> None:
         raise RuntimeError(f"{tag} does not match the source image digest")
 
 
+def build(tag: str) -> None:
+    run(
+        "docker",
+        "buildx",
+        "build",
+        "--platform",
+        "linux/amd64",
+        "--provenance=false",
+        "--output",
+        "type=docker,oci-mediatypes=false",
+        "-f",
+        "deployment/Dockerfile",
+        "-t",
+        f"{IMAGE}:{tag}",
+        ".",
+    )
+    run("docker", "push", f"{IMAGE}:{tag}")
+
+
 def publish_dev(commit: str) -> None:
     if not re.fullmatch(r"[0-9a-f]{40}", commit) or commit != run(
         "git", "rev-parse", "HEAD"
@@ -76,22 +95,7 @@ def publish_dev(commit: str) -> None:
         )
     version = f"dev-{commit}"
     if not exists(version):
-        run(
-            "docker",
-            "buildx",
-            "build",
-            "--platform",
-            "linux/amd64",
-            "--provenance=false",
-            "--output",
-            "type=docker,oci-mediatypes=false",
-            "-f",
-            "deployment/Dockerfile",
-            "-t",
-            f"{IMAGE}:{version}",
-            ".",
-        )
-        run("docker", "push", f"{IMAGE}:{version}")
+        build(version)
 
     print(f"Dev image: {IMAGE}:{version}")
     print(
@@ -109,26 +113,21 @@ def publish(tag: str, *, promote: bool = False) -> None:
             "Release tag must match the application version in pyproject.toml"
         )
 
-    source = f"dev-{run('git', 'rev-parse', 'HEAD')}"
-    if not exists(source):
-        raise RuntimeError(
-            f"Missing {IMAGE}:{source}; build and test this commit on dev first"
-        )
-    source_digest = digest(source)
-    if exists(version):
-        if digest(version) != source_digest:
-            raise RuntimeError(
-                f"Refusing to replace existing release {version} with a different image"
-            )
-    else:
-        alias(source_digest, version)
+    run("git", "fetch", "origin", "main", "--tags")
+    if subprocess.run(
+        ["git", "merge-base", "--is-ancestor", "HEAD", "origin/main"],
+        check=False,
+    ).returncode:
+        raise RuntimeError("Release tag must point to a commit reachable from main")
+
+    if not exists(version):
+        build(version)
 
     if not promote:
         return
 
     # CI holds one resource_group across publishing and promotion. Refresh tags
     # inside that lock so pipeline completion order cannot roll latest backward.
-    run("git", "fetch", "origin", "--tags")
     tags = run("git", "tag", "--list").splitlines()
     versions = {tag.removeprefix("v") for tag in tags if VERSION.fullmatch(tag)}
     versions.add(version)

@@ -1,4 +1,4 @@
-"""Release selection must not depend on pipeline completion order."""
+"""Release images are built from protected tags on main."""
 
 from __future__ import annotations
 
@@ -25,7 +25,6 @@ def test_publish_and_promote(monkeypatch, tmp_path, published, tags, expected):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.2"\n')
     images = {version: f"sha256:{version}" for version in published}
-    images[f"dev-{COMMIT}"] = "sha256:1.0.2"
     calls = []
 
     def run(*args):
@@ -34,18 +33,25 @@ def test_publish_and_promote(monkeypatch, tmp_path, published, tags, expected):
             return COMMIT
         if args == ("git", "tag", "--list"):
             return "\n".join(tags)
+        if args[:2] == ("docker", "push"):
+            images[args[2].split(":")[-1]] = "sha256:1.0.2"
         if args[:4] == ("docker", "buildx", "imagetools", "create"):
             images[args[-2].split(":")[-1]] = args[-1].split("@")[1]
         return ""
 
     monkeypatch.setattr(release, "run", run)
+    monkeypatch.setattr(
+        release.subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args, 0),
+    )
     monkeypatch.setattr(release, "exists", lambda version: version in images)
     monkeypatch.setattr(release, "digest", images.__getitem__)
     release.publish("v1.0.2", promote=True)
-    assert not any(call[:3] == ("docker", "buildx", "build") for call in calls)
-    assert images["1.0.2"] == images[f"dev-{COMMIT}"]
+    built = "1.0.2" not in published
+    assert any(call[:3] == ("docker", "buildx", "build") for call in calls) is built
+    assert (("docker", "push", f"{release.IMAGE}:1.0.2") in calls) is built
     assert images["latest"] == images[expected]
-    assert ("git", "fetch", "origin", "--tags") in calls
 
 
 @pytest.mark.parametrize("already_built", [False, True])
@@ -80,10 +86,7 @@ def test_dev_requires_checkout_sha(monkeypatch, commit):
         release.publish_dev(commit)
 
 
-@pytest.mark.parametrize("missing", [True, False])
-def test_release_refuses_missing_dev_image_or_conflicting_release(
-    monkeypatch, tmp_path, missing
-):
+def test_release_requires_main_ancestor(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.2"\n')
     calls = []
@@ -93,11 +96,14 @@ def test_release_refuses_missing_dev_image_or_conflicting_release(
         return COMMIT
 
     monkeypatch.setattr(release, "run", run)
-    monkeypatch.setattr(release, "exists", lambda version: not missing)
-    monkeypatch.setattr(release, "digest", lambda version: version)
-    with pytest.raises(RuntimeError, match="Missing" if missing else "Refusing"):
+    monkeypatch.setattr(
+        release.subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args, 1),
+    )
+    with pytest.raises(RuntimeError, match="reachable from main"):
         release.publish("v1.0.2", promote=True)
-    assert calls == [("git", "rev-parse", "HEAD")]
+    assert ("git", "fetch", "origin", "main", "--tags") in calls
 
 
 def test_version_validation(monkeypatch, tmp_path):
