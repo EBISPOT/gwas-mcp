@@ -21,7 +21,7 @@ ingress:
   mcpPath: "/gwas/mcp"
 
 env:
-  apiBaseUrl: "http://gwas-rest-api.gwas-dev.svc.cluster.local:8080/gwas/rest/api"
+  apiBaseUrl: "http://gwas-rest-api-dev.gwas-dev.svc.cluster.local:8080/gwas/rest/api"
   httpProxy: "http://hh-wwwcache.ebi.ac.uk:3128"
 
 resources:

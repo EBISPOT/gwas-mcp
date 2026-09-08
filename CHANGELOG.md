@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Point the development MCP deployment at the `gwas-rest-api-dev` service.
 - Build AMD64 `dev-<commit SHA>` images after successful checks on pushes to
   `dev`, and print the command for manual deployment.
 - Promote the matching dev image to release tags without rebuilding; fail if
