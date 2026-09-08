@@ -24,7 +24,7 @@ def run(*args: str) -> str:
 
 
 def digest(version: str) -> str:
-    return run(
+    output = run(
         "docker",
         "buildx",
         "imagetools",
@@ -33,6 +33,12 @@ def digest(version: str) -> str:
         "--format",
         "{{.Manifest.Digest}}",
     )
+    if re.fullmatch(r"sha256:[0-9a-f]{64}", output):
+        return output
+    match = re.search(r"(?m)^Digest:\s+(sha256:[0-9a-f]{64})\s*$", output)
+    if match is None:
+        raise RuntimeError(f"Could not parse image digest for {IMAGE}:{version}")
+    return match.group(1)
 
 
 def exists(version: str) -> bool:
